@@ -7,7 +7,7 @@ urlpatterns = [
     path('', lambda r: redirect('api/docs/')),
     path('admin/', admin.site.urls),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='docs'),
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='docs'),
     path('api/auth/', include('accounts.urls')),
     path('api/', include('products.urls')),
     path('api/', include('wardrobe.urls')),
