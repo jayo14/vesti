@@ -24,3 +24,31 @@ class MeView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+class PasswordResetRequestView(generics.GenericAPIView):
+    serializer_class = PasswordResetRequestSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+        user = User.objects.filter(email__iexact=email).first()
+        if user:
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+            reset_url = f"{request.scheme}://{request.get_host()}/api/auth/password-reset-confirm/?uid={uid}&token={token}"
+            if settings.EMAIL_HOST and settings.EMAIL_HOST not in ('localhost',):
+                send_mail(
+                    'Reset your VESTI password',
+                    f"Use the link below to reset your password:\n{reset_url}",
+                    settings.DEFAULT_FROM_EMAIL,
+                    [email],
+                    fail_silently=False,
+                )
+            else:
+                return Response(
+                    {'detail': 'Password reset initiated.', 'uid': uid, 'token': token},
+                    status=status.HTTP_200_OK,
+                )
+        return Response({'detail': 'If an account exists for that email, a reset link has been sent.'}, status=status.HTTP_200_OK)
