@@ -24,3 +24,6 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'email', 'bio', 'avatar', 'is_designer', 'date_joined']
         read_only_fields = ['id', 'date_joined']
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
