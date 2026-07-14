@@ -18,6 +18,23 @@
 - Registered all models in admin
 - Migrations applied, server starts
 
+## 2026-07-14 — drf-spectacular docs + endpoint verification
+
+**Done:**
+- Installed and configured drf-spectacular
+- Added `/docs/` (Swagger UI) and `/api/schema/` (OpenAPI schema) endpoints
+- Root `/` redirects to `/docs/`
+- Verified all 21 API paths documented in schema
+- Confirmed all endpoints responding correctly:
+  - Auth: register, login, token refresh, profile
+  - Products: list, detail
+  - Wardrobe: create, list (user-scoped)
+  - Reviews: create with FK validation
+  - Orders: create, list (user-scoped)
+  - Studio: create, list (user-scoped)
+  - AI: outfit-recommend, styling, try-on, smart-search, edit
+  - Auth guard working (401 on no token)
+
 **Next:**
 - Add django-filter for product filtering/searching
 - Add image upload support (via cloud storage or local)
