@@ -20,6 +20,7 @@ export default function SiteFooter() {
               <li><Link href="/wardrobe" className="hover:text-brand-600">Wardrobe</Link></li>
               <li><Link href="/designers" className="hover:text-brand-600">Designers</Link></li>
               <li><Link href="/playground" className="hover:text-brand-600">AI Playground</Link></li>
+              <li><Link href="/studio" className="hover:text-brand-600">Design Studio</Link></li>
             </ul>
           </div>
           <div>
