@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import ZAI from "z-ai-web-dev-sdk";
+import { chat } from "@/lib/openrouter";
 import type {
   SmartSearchRequest,
   SmartSearchResponse,
@@ -60,15 +60,10 @@ interface LlmParsed {
 }
 
 async function parseQueryWithLLM(query: string): Promise<LlmParsed> {
-  const zai = await ZAI.create();
-  const response = await zai.chat.completions.create({
-    messages: [
+    const raw = await chat([
       { role: "assistant", content: SYSTEM_PROMPT },
       { role: "user", content: query },
-    ],
-    thinking: { type: "disabled" },
-  });
-  const raw = response.choices[0]?.message?.content?.trim() || "";
+    ]);
 
   // Strip markdown fences if present
   let jsonStr = raw;
