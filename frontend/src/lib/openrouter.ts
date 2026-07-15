@@ -53,7 +53,7 @@ export async function generateImage(
   _size = "1024x1792"
 ): Promise<string | null> {
   const res = await fetchJSON("/chat/completions", {
-    model: "google/gemini-2.5-flash-image:free",
+    model: "x-ai/grok-imagine-image-quality",
     messages: [{ role: "user", content: prompt }],
     modalities: ["image", "text"],
   });
