@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import ZAI from "z-ai-web-dev-sdk";
+import { chat, generateImage } from "@/lib/openrouter";
 import type { EditRequest, EditResponse } from "@/lib/types";
 import { EDITABLE_COMPONENT_MAP } from "@/lib/editable-components";
 
@@ -55,25 +55,20 @@ async function describeImage(image: string): Promise<string> {
     return "a person wearing a stylish garment";
   }
   try {
-    const zai = await ZAI.create();
-    const response = await zai.chat.completions.createVision({
-      messages: [
-        {
-          role: "assistant",
-          content:
-            "You are a fashion photography assistant. Describe this image concisely for an AI image editor. Focus on: the person's pose and stance, the garment (type, color, length, fit, neckline, sleeves, notable details like buttons/pockets/embroidery), the lighting, and the background. Keep it under 90 words. Be specific about the garment's current state so the editor knows what to preserve vs. modify.",
-        },
-        {
-          role: "user",
-          content: [
-            { type: "text", text: "Describe this image for an AI edit." },
-            { type: "image_url", image_url: { url: image } },
-          ],
-        },
-      ],
-      thinking: { type: "disabled" },
-    });
-    const text = response.choices[0]?.message?.content?.trim() || "";
+    const text = await chat([
+      {
+        role: "assistant",
+        content:
+          "You are a fashion photography assistant. Describe this image concisely for an AI image editor. Focus on: the person's pose and stance, the garment (type, color, length, fit, neckline, sleeves, notable details like buttons/pockets/embroidery), the lighting, and the background. Keep it under 90 words. Be specific about the garment's current state so the editor knows what to preserve vs. modify.",
+      },
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "Describe this image for an AI edit." },
+          { type: "image_url", image_url: { url: image } },
+        ],
+      },
+    ]);
     return text.slice(0, 700) || "a person wearing a stylish garment";
   } catch (err) {
     console.error("describeImage failed:", err);
@@ -116,19 +111,16 @@ export async function POST(req: NextRequest) {
     });
 
     // Step 4: Generate the edited image. Retry up to 2 times on transient
-    // upstream failures (the SDK sometimes throws on malformed responses).
-    const zai = await ZAI.create();
-    let genResponse: Awaited<
-      ReturnType<typeof zai.images.generations.create>
-    > | null = null;
+    // upstream failures.
+    let resultImage: string | null = null;
     let lastErr: unknown = null;
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        genResponse = await zai.images.generations.create({
-          prompt: editPrompt,
-          size: "768x1344",
-        });
-        if (genResponse?.data?.[0]?.base64) break;
+        const b64 = await generateImage(editPrompt, "1024x1792");
+        if (b64) {
+          resultImage = b64;
+          break;
+        }
       } catch (err) {
         lastErr = err;
         console.warn(`Image edit attempt ${attempt + 1} failed:`, err);
@@ -136,8 +128,7 @@ export async function POST(req: NextRequest) {
       if (attempt < 2) await new Promise((r) => setTimeout(r, 1200));
     }
 
-    const base64 = genResponse?.data?.[0]?.base64;
-    if (!base64) {
+    if (!resultImage) {
       const msg =
         lastErr instanceof Error
           ? `Edit failed: ${lastErr.message}`
@@ -148,7 +139,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const resultImage = `data:image/png;base64,${base64}`;
     const durationMs = Date.now() - start;
 
     return NextResponse.json<EditResponse>({
