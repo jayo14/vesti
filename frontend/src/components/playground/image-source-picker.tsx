@@ -1,26 +1,160 @@
-export default function ImageSourcePicker() {
+"use client";
+
+import { motion } from "framer-motion";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Sparkles, Image as ImageIcon, Heart, Wand2 } from "lucide-react";
+import { useStudioStore } from "@/lib/store";
+import { FEATURED_GARMENTS } from "@/lib/data";
+
+interface ImageSourcePickerProps {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  onPick: (image: string, label: string) => void;
+}
+
+export function ImageSourcePicker({
+  open,
+  onOpenChange,
+  onPick,
+}: ImageSourcePickerProps) {
+  const { savedLooks, resultImage, personImage } = useStudioStore();
+
+  const sources: {
+    id: string;
+    label: string;
+    sub: string;
+    icon: typeof ImageIcon;
+    image?: string | null;
+    disabled?: boolean;
+    badge?: string;
+  }[] = [
+    {
+      id: "studio",
+      label: "Studio result",
+      sub: resultImage ? "Your latest AI try-on" : "Generate one in the Studio first",
+      icon: Wand2,
+      image: resultImage,
+      disabled: !resultImage,
+      badge: resultImage ? "Ready" : "Empty",
+    },
+    {
+      id: "wardrobe",
+      label: "Saved wardrobe look",
+      sub: savedLooks.length
+        ? `${savedLooks.length} saved look${savedLooks.length !== 1 ? "s" : ""}`
+        : "No saved looks yet",
+      icon: Heart,
+      disabled: savedLooks.length === 0,
+      badge: savedLooks.length ? `${savedLooks.length}` : "0",
+    },
+    {
+      id: "featured",
+      label: "Featured garment",
+      sub: "Start from a curated piece",
+      icon: Sparkles,
+      badge: "3",
+    },
+  ];
+
   return (
-    <div className="space-y-2">
-      <h3 className="text-sm font-medium text-neutral-700">Source Image</h3>
-      <div className="grid grid-cols-2 gap-3">
-        <button className="rounded-lg border border-neutral-300 p-4 text-center text-sm text-neutral-600 transition hover:border-brand-400 hover:text-brand-700">
-          <div className="mx-auto mb-1 h-8 w-8 text-brand-500">
-            <svg className="h-full w-full" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z" />
-            </svg>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="font-serif text-2xl">Load an image</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-2 mt-2">
+          {sources.map((s) => {
+            const disabled = s.disabled;
+            return (
+              <motion.button
+                key={s.id}
+                whileHover={!disabled ? { scale: 1.01 } : undefined}
+                whileTap={!disabled ? { scale: 0.99 } : undefined}
+                onClick={() => {
+                  if (s.id === "studio" && resultImage) {
+                    onPick(resultImage, "Studio result");
+                    onOpenChange(false);
+                  } else if (s.id === "featured") {
+                    const g = FEATURED_GARMENTS[0];
+                    if (g) {
+                      onPick(g.image, g.name);
+                      onOpenChange(false);
+                    }
+                  }
+                  // Wardrobe is handled in the parent — show a list inline.
+                  // For simplicity, we just dismiss and let parent show it.
+                }}
+                disabled={disabled}
+                className={`w-full flex items-center gap-3 p-3 rounded-2xl border border-border text-left transition-colors ${
+                  disabled
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:bg-foreground/[0.03]"
+                }`}
+              >
+                <div
+                  className={`w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center ${
+                    s.image ? "" : "bg-foreground/5"
+                  }`}
+                >
+                  {s.image ? (
+                    <img
+                      src={s.image}
+                      alt={s.label}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <s.icon className="w-5 h-5 text-foreground/40" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium">{s.label}</div>
+                  <div className="text-xs text-muted-foreground truncate">
+                    {s.sub}
+                  </div>
+                </div>
+                {s.badge && (
+                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-foreground/70">
+                    {s.badge}
+                  </span>
+                )}
+              </motion.button>
+            );
+          })}
+        </div>
+
+        {/* Wardrobe looks inline (if any) */}
+        {savedLooks.length > 0 && (
+          <div className="mt-4">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
+              Or pick from your wardrobe
+            </div>
+            <div className="grid grid-cols-4 gap-2 max-h-40 overflow-y-auto">
+              {savedLooks.slice(0, 12).map((look) => (
+                <button
+                  key={look.id}
+                  onClick={() => {
+                    onPick(look.resultImage, look.garmentName);
+                    onOpenChange(false);
+                  }}
+                  className="aspect-[3/4] rounded-lg overflow-hidden border border-border hover:border-champagne transition-colors"
+                >
+                  <img
+                    src={look.resultImage}
+                    alt={look.garmentName}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
           </div>
-          Upload Photo
-        </button>
-        <button className="rounded-lg border border-neutral-300 p-4 text-center text-sm text-neutral-600 transition hover:border-brand-400 hover:text-brand-700">
-          <div className="mx-auto mb-1 h-8 w-8 text-brand-500">
-            <svg className="h-full w-full" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.41a2.25 2.25 0 0 1 3.182 0l2.909 2.91m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
-            </svg>
-          </div>
-          Use Model
-        </button>
-      </div>
-    </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }

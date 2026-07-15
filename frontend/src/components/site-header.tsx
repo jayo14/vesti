@@ -1,136 +1,180 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { fetchProfile, isAuthenticated, logout, type User } from "@/lib/auth";
+import { motion, AnimatePresence } from "framer-motion";
+import { Sparkles, Menu, X, ShoppingBag } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useStudioStore } from "@/lib/store";
+import type { ViewMode } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
-const navLinks = [
-  { href: "/marketplace", label: "Marketplace" },
-  { href: "/wardrobe", label: "Wardrobe" },
-  { href: "/playground", label: "Playground" },
-  { href: "/designers", label: "Designers" },
-  { href: "/studio", label: "Studio" },
+const NAV_ITEMS: { id: ViewMode; label: string }[] = [
+  { id: "hero", label: "Home" },
+  { id: "studio", label: "Studio" },
+  { id: "playground", label: "Playground" },
+  { id: "marketplace", label: "Marketplace" },
+  { id: "designers", label: "Designers" },
+  { id: "wardrobe", label: "Wardrobe" },
 ];
 
-export default function SiteHeader() {
-  const [user, setUser] = useState<User | null>(null);
-  const [checked, setChecked] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+export function SiteHeader() {
+  const { view, setView, savedLooks } = useStudioStore();
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated()) {
-      setChecked(true);
-      return;
-    }
-    fetchProfile()
-      .then(setUser)
-      .catch(() => setUser(null))
-      .finally(() => setChecked(true));
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  function onLogout() {
-    logout();
-    setUser(null);
-    window.location.href = "/sign-in";
-  }
+  const handleNav = (v: ViewMode) => {
+    setView(v);
+    setMobileOpen(false);
+    // Scroll to top of main content
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   return (
-    <header className="sticky top-0 z-10 border-b border-neutral-200 bg-white/80 backdrop-blur">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-        <Link href="/" className="text-lg font-bold tracking-tight">
-          VESTI
-        </Link>
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="rounded-lg p-2 text-neutral-600 hover:bg-neutral-100 sm:hidden"
-        >
-          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            {menuOpen ? (
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+    <>
+      <motion.header
+        initial={{ y: -40, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        className={cn(
+          "fixed top-0 inset-x-0 z-50 transition-all duration-300",
+          scrolled ? "py-2" : "py-4"
+        )}
+      >
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div
+            className={cn(
+              "flex items-center justify-between rounded-2xl px-4 sm:px-6 h-14 transition-all duration-300",
+              scrolled
+                ? "glass-strong shadow-premium"
+                : "bg-transparent border border-transparent"
             )}
-          </svg>
-        </button>
-        <nav className="hidden items-center gap-4 text-sm sm:flex">
-          {navLinks.map((l) => (
-            <Link key={l.href} href={l.href} className="text-neutral-600 hover:text-brand-600">
-              {l.label}
-            </Link>
-          ))}
-          {checked && user ? (
-            <>
-              <span className="text-neutral-600">Hi, {user.username}</span>
+          >
+            {/* Logo */}
+            <button
+              onClick={() => handleNav("hero")}
+              className="flex items-center gap-2 group"
+              aria-label="AI Fashion Studio — Home"
+            >
+              <div className="relative w-8 h-8 rounded-lg bg-foreground flex items-center justify-center overflow-hidden">
+                <Sparkles className="w-4 h-4 text-background" strokeWidth={2.5} />
+                <div className="absolute inset-0 bg-gradient-to-br from-champagne/0 via-champagne/0 to-champagne/30 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+              <div className="flex flex-col items-start leading-none">
+                <span className="font-serif text-base font-medium tracking-tight">
+                  AI Fashion
+                </span>
+                <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                  Studio
+                </span>
+              </div>
+            </button>
+
+            {/* Desktop nav */}
+            <nav className="hidden md:flex items-center gap-1">
+              {NAV_ITEMS.map((item) => {
+                const active = view === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => handleNav(item.id)}
+                    className={cn(
+                      "relative px-4 py-2 text-sm font-medium rounded-full transition-colors",
+                      active
+                        ? "text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {active && (
+                      <motion.span
+                        layoutId="nav-pill"
+                        className="absolute inset-0 rounded-full bg-foreground/5"
+                        transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                      />
+                    )}
+                    <span className="relative z-10">{item.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+
+            {/* Right side — wardrobe count + CTA */}
+            <div className="flex items-center gap-2">
               <button
-                onClick={onLogout}
-                className="rounded-lg border border-neutral-300 px-3 py-1.5 font-medium text-neutral-700 transition hover:bg-neutral-100"
+                onClick={() => handleNav("wardrobe")}
+                className="relative hidden sm:flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-full text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="View wardrobe"
               >
-                Sign out
+                <ShoppingBag className="w-4 h-4" />
+                <span>{savedLooks.length}</span>
               </button>
-            </>
-          ) : (
-            <>
-              <Link
-                href="/sign-in"
-                className="rounded-lg border border-neutral-300 px-3 py-1.5 font-medium text-neutral-700 transition hover:bg-neutral-100"
+              <button
+                onClick={() => handleNav("studio")}
+                className="hidden sm:inline-flex items-center px-4 py-2 text-sm font-medium rounded-full bg-foreground text-background hover:opacity-90 transition-opacity"
               >
-                Sign in
-              </Link>
-              <Link
-                href="/sign-up"
-                className="rounded-lg bg-brand-600 px-3 py-1.5 font-semibold text-white transition hover:bg-brand-700"
+                Try On
+              </button>
+              {/* Mobile menu button */}
+              <button
+                onClick={() => setMobileOpen((v) => !v)}
+                className="md:hidden p-2 rounded-full hover:bg-foreground/5 transition-colors"
+                aria-label="Toggle menu"
               >
-                Sign up
-              </Link>
-            </>
-          )}
-        </nav>
-      </div>
-      {menuOpen && (
-        <div className="border-t border-neutral-200 bg-white px-4 py-3 sm:hidden">
-          <nav className="flex flex-col gap-3 text-sm">
-            {navLinks.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                className="text-neutral-600 hover:text-brand-600"
-                onClick={() => setMenuOpen(false)}
-              >
-                {l.label}
-              </Link>
-            ))}
-            <hr className="border-neutral-200" />
-            {checked && user ? (
-              <>
-                <span className="text-neutral-600">Hi, {user.username}</span>
-                <button
-                  onClick={onLogout}
-                  className="rounded-lg border border-neutral-300 px-3 py-1.5 text-left font-medium text-neutral-700 transition hover:bg-neutral-100"
-                >
-                  Sign out
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/sign-in"
-                  className="rounded-lg border border-neutral-300 px-3 py-1.5 font-medium text-neutral-700 transition hover:bg-neutral-100"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Sign in
-                </Link>
-                <Link
-                  href="/sign-up"
-                  className="rounded-lg bg-brand-600 px-3 py-1.5 text-center font-semibold text-white transition hover:bg-brand-700"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Sign up
-                </Link>
-              </>
-            )}
-          </nav>
+                {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
+            </div>
+          </div>
         </div>
-      )}
-    </header>
+      </motion.header>
+
+      {/* Mobile menu */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 md:hidden bg-background/80 backdrop-blur-lg"
+            onClick={() => setMobileOpen(false)}
+          >
+            <motion.nav
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -20, opacity: 0 }}
+              transition={{ delay: 0.05 }}
+              className="pt-24 px-6 flex flex-col gap-2"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {NAV_ITEMS.map((item, i) => (
+                <motion.button
+                  key={item.id}
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  transition={{ delay: 0.1 + i * 0.05 }}
+                  onClick={() => handleNav(item.id)}
+                  className={cn(
+                    "text-left py-4 text-2xl font-serif border-b border-border",
+                    view === item.id ? "text-foreground" : "text-muted-foreground"
+                  )}
+                >
+                  {item.label}
+                </motion.button>
+              ))}
+              <button
+                onClick={() => handleNav("studio")}
+                className="mt-6 w-full py-3 text-sm font-medium rounded-full bg-foreground text-background"
+              >
+                Try On Now
+              </button>
+            </motion.nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
