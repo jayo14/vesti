@@ -1,4 +1,6 @@
 from rest_framework import viewsets, permissions, filters
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from django.db.models import Q
 from .models import Product, Category
 from .serializers import ProductSerializer, CategorySerializer
@@ -34,3 +36,14 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [permissions.AllowAny]
+
+class OptionsView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        return Response({
+            "materials": ["Cotton", "Silk", "Denim", "Leather", "Linen", "Wool", "Polyester", "Velvet", "Cashmere"],
+            "colours": ["Black", "White", "Red", "Blue", "Green", "Beige", "Navy", "Grey", "Pink", "Purple"],
+            "fits": ["Slim", "Regular", "Oversized"],
+            "sizes": ["XS", "S", "M", "L", "XL", "XXL"],
+        })
