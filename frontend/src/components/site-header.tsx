@@ -32,6 +32,21 @@ export default function SiteHeader() {
           VESTI
         </Link>
         <nav className="flex items-center gap-4 text-sm">
+          <Link href="/marketplace" className="text-neutral-600 hover:text-brand-600">
+            Marketplace
+          </Link>
+          <Link href="/wardrobe" className="text-neutral-600 hover:text-brand-600">
+            Wardrobe
+          </Link>
+          <Link href="/playground" className="text-neutral-600 hover:text-brand-600">
+            Playground
+          </Link>
+          <Link href="/designers" className="text-neutral-600 hover:text-brand-600">
+            Designers
+          </Link>
+          <Link href="/studio" className="text-neutral-600 hover:text-brand-600">
+            Studio
+          </Link>
           {checked && user ? (
             <>
               <span className="text-neutral-600">Hi, {user.username}</span>
