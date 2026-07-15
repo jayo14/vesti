@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import ZAI from "z-ai-web-dev-sdk";
+import { chat } from "@/lib/openrouter";
 import type {
   StylingsuggestionsRequest,
   StylingsuggestionsResponse,
@@ -27,14 +27,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const zai = await ZAI.create();
-
     // Step 1: Use the VLM to analyze the garment and propose styling ideas.
-    const visionResponse = await zai.chat.completions.createVision({
-      messages: [
-        {
-          role: "assistant",
-          content: `You are an expert fashion stylist. Look at this garment (${productName}: ${productDescription}). Propose 3 different styling ideas for different occasions.
+    const raw = await chat([
+      {
+        role: "assistant",
+        content: `You are an expert fashion stylist. Look at this garment (${productName}: ${productDescription}). Propose 3 different styling ideas for different occasions.
 
 Return your answer as a JSON array of 3 objects, each with these fields:
 - "title": short name (e.g. "Sunday brunch", "Gallery opening")
@@ -44,28 +41,22 @@ Return your answer as a JSON array of 3 objects, each with these fields:
 
 Return ONLY the JSON array, no other text. Example:
 [{"title":"Sunday brunch","occasion":"Casual weekend","description":"Pair with...","pairing":["...","...","..."]}]`,
-        },
-        {
-          role: "user",
-          content: [
-            { type: "text", text: "Propose 3 styling ideas for this garment." },
-            { type: "image_url", image_url: { url: productImage } },
-          ],
-        },
-      ],
-      thinking: { type: "disabled" },
-    });
-
-    const raw = visionResponse.choices[0]?.message?.content?.trim() || "";
+      },
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "Propose 3 styling ideas for this garment." },
+          { type: "image_url", image_url: { url: productImage } },
+        ],
+      },
+    ]);
 
     // Step 2: Parse the JSON (be defensive — extract the JSON array from the
     // response even if there's surrounding prose).
     let suggestions: StylingSuggestion[] = [];
     try {
-      // Try direct parse first
       suggestions = JSON.parse(raw);
     } catch {
-      // Fallback: extract array via regex
       const match = raw.match(/\[[\s\S]*\]/);
       if (match) {
         try {
@@ -76,7 +67,6 @@ Return ONLY the JSON array, no other text. Example:
       }
     }
 
-    // Validate / normalize
     if (!Array.isArray(suggestions) || suggestions.length === 0) {
       throw new Error("No suggestions parsed from AI response.");
     }
