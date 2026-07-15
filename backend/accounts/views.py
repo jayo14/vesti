@@ -5,9 +5,11 @@ from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from .serializers import (
     RegisterSerializer,
     UserSerializer,
+    DesignerSerializer,
     PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer,
 )
@@ -70,3 +72,8 @@ class PasswordResetConfirmView(generics.GenericAPIView):
         user.set_password(serializer.validated_data['new_password'])
         user.save()
         return Response({'detail': 'Password has been reset successfully.'}, status=status.HTTP_200_OK)
+
+class DesignersListView(generics.ListAPIView):
+    queryset = User.objects.filter(is_designer=True)
+    serializer_class = DesignerSerializer
+    permission_classes = [permissions.AllowAny]
