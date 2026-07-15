@@ -1,7 +1,10 @@
 from django.contrib import admin
 from django.urls import path, include
 from django.shortcuts import redirect
+from django.conf import settings
+from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from .upload import UploadView
 
 urlpatterns = [
     path('', lambda r: redirect('api/docs/')),
@@ -15,4 +18,5 @@ urlpatterns = [
     path('api/', include('orders.urls')),
     path('api/', include('studio.urls')),
     path('api/', include('ai.urls')),
-]
+    path('api/upload/', UploadView.as_view(), name='upload'),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
