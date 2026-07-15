@@ -3,14 +3,18 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.db.models import Q
 from .models import Product, Category
-from .serializers import ProductSerializer, CategorySerializer
+from .serializers import ProductListSerializer, ProductDetailSerializer, CategorySerializer
 
 class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Product.objects.all()
-    serializer_class = ProductSerializer
     permission_classes = [permissions.AllowAny]
     filter_backends = [filters.SearchFilter]
     search_fields = ["name", "description", "category__name"]
+
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return ProductDetailSerializer
+        return ProductListSerializer
 
     def get_queryset(self):
         qs = Product.objects.all()

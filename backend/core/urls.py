@@ -3,6 +3,7 @@ from django.urls import path, include
 from django.shortcuts import redirect
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import JsonResponse
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from .upload import UploadView
 
@@ -19,4 +20,5 @@ urlpatterns = [
     path('api/', include('studio.urls')),
     path('api/', include('ai.urls')),
     path('api/upload/', UploadView.as_view(), name='upload'),
+    path('api/health/', lambda r: JsonResponse({"status": "ok"}), name='health'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
