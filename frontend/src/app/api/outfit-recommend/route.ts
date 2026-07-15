@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import ZAI from "z-ai-web-dev-sdk";
+import { chat } from "@/lib/openrouter";
 import type {
   OutfitRecommendationRequest,
   OutfitRecommendationResponse,
@@ -119,19 +119,13 @@ Rules:
 - Use real marketplace product IDs if suggesting fillers.
 - Return ONLY the JSON array, no other text.`;
 
-    const zai = await ZAI.create();
-    const response = await zai.chat.completions.create({
-      messages: [
-        { role: "assistant", content: systemPrompt },
-        {
-          role: "user",
-          content: `Suggest 2-3 outfits for: ${occasion} | ${WEATHER_LABELS[weather]} | ${TIME_LABELS[timeOfDay]} | ${DRESS_CODE_LABELS[dressCode]}`,
-        },
-      ],
-      thinking: { type: "disabled" },
-    });
-
-    const raw = response.choices[0]?.message?.content?.trim() || "";
+    const raw = await chat([
+      { role: "assistant", content: systemPrompt },
+      {
+        role: "user",
+        content: `Suggest 2-3 outfits for: ${occasion} | ${WEATHER_LABELS[weather]} | ${TIME_LABELS[timeOfDay]} | ${DRESS_CODE_LABELS[dressCode]}`,
+      },
+    ]);
 
     // Parse JSON defensively
     let outfits: unknown[] = [];
