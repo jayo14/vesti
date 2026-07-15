@@ -52,25 +52,51 @@ export async function generateImage(
   prompt: string,
   _size = "1024x1792"
 ): Promise<string | null> {
-  const res = await fetch(`${BASE}/images`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${getKey()}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "x-ai/grok-imagine-image-quality",
-      prompt,
-      aspect_ratio: "9:16",
-      resolution: "1K",
-    }),
-  });
-  if (!res.ok) {
-    const err = await res.text().catch(() => "Unknown error");
-    throw new Error(`OpenRouter image error (${res.status}): ${err}`);
+  const replicateKey = process.env.REPLICATE_API_KEY;
+  if (!replicateKey) throw new Error("REPLICATE_API_KEY not set");
+
+  const createRes = await fetch(
+    "https://api.replicate.com/v1/models/black-forest-labs/flux-schnell/predictions",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${replicateKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        input: {
+          prompt,
+          aspect_ratio: "9:16",
+          num_outputs: 1,
+        },
+      }),
+    }
+  );
+  if (!createRes.ok) {
+    const err = await createRes.text().catch(() => "Unknown error");
+    throw new Error(`Replicate create error (${createRes.status}): ${err}`);
   }
-  const data = await res.json();
-  const b64 = data.data?.[0]?.b64_json;
-  if (!b64) return null;
-  return `data:image/png;base64,${b64}`;
+
+  const { id } = await createRes.json();
+
+  // Poll until complete
+  let lastStatus = "";
+  for (let i = 0; i < 60; i++) {
+    await new Promise((r) => setTimeout(r, 2000));
+    const pollRes = await fetch(
+      `https://api.replicate.com/v1/predictions/${id}`,
+      { headers: { Authorization: `Bearer ${replicateKey}` } }
+    );
+    const data = await pollRes.json();
+    lastStatus = data.status;
+    if (data.status === "succeeded") {
+      const url = data.output?.[0];
+      if (!url) return null;
+      return urlToBase64(url);
+    }
+    if (data.status === "failed" || data.status === "canceled") {
+      throw new Error(`Replicate prediction ${data.status}: ${data.error || "unknown"}`);
+    }
+  }
+  throw new Error(`Replicate prediction timed out (last status: ${lastStatus})`);
 }
