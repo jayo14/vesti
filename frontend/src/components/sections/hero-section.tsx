@@ -25,6 +25,12 @@ export default function HeroSection() {
           >
             Try AI Studio
           </Link>
+          <Link
+            href="/studio"
+            className="rounded-lg border border-brand-200 px-6 py-3 font-medium text-brand-600 transition hover:bg-brand-50"
+          >
+            Design Studio
+          </Link>
         </div>
       </div>
     </section>
