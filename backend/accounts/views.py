@@ -10,6 +10,7 @@ from .serializers import (
     RegisterSerializer,
     UserSerializer,
     DesignerSerializer,
+    UserListSerializer,
     PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer,
 )
@@ -76,4 +77,9 @@ class PasswordResetConfirmView(generics.GenericAPIView):
 class DesignersListView(generics.ListAPIView):
     queryset = User.objects.filter(is_designer=True)
     serializer_class = DesignerSerializer
+    permission_classes = [permissions.AllowAny]
+
+class UsersListView(generics.ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserListSerializer
     permission_classes = [permissions.AllowAny]
