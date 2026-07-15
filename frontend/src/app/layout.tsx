@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "VESTI — Fashion, your way",
-  description: "Backend API for the VESTI fashion-tech platform",
+  description: "Discover, design, and wear what you love with AI-powered fashion.",
 };
 
 export default function RootLayout({
