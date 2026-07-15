@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import SiteHeader from "@/components/site-header";
 import PlaygroundSection from "@/components/sections/playground-section";
+
+export const metadata: Metadata = {
+  title: "AI Playground — VESTI",
+  description: "Design, edit, and try on garments using generative AI.",
+};
 
 export default function PlaygroundPage() {
   return (
