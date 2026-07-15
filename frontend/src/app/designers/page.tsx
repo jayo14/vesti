@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import SiteHeader from "@/components/site-header";
+import SiteFooter from "@/components/site-footer";
 import DesignersSection from "@/components/sections/designers-section";
 
 export const metadata: Metadata = {
@@ -14,6 +15,7 @@ export default function DesignersPage() {
       <main>
         <DesignersSection />
       </main>
+      <SiteFooter />
     </div>
   );
 }

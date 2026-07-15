@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import SiteHeader from "@/components/site-header";
+import SiteFooter from "@/components/site-footer";
 import StudioSection from "@/components/studio/studio-section";
 
 export const metadata: Metadata = {
@@ -9,11 +10,12 @@ export const metadata: Metadata = {
 
 export default function StudioPage() {
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="min-h-screen">
       <SiteHeader />
       <main>
         <StudioSection />
       </main>
+      <SiteFooter />
     </div>
   );
 }

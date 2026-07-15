@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import SiteHeader from "@/components/site-header";
+import SiteFooter from "@/components/site-footer";
 import WardrobeSection from "@/components/sections/wardrobe-section";
 
 export const metadata: Metadata = {
@@ -14,6 +15,7 @@ export default function WardrobePage() {
       <main>
         <WardrobeSection />
       </main>
+      <SiteFooter />
     </div>
   );
 }

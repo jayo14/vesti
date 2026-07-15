@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import SiteHeader from "@/components/site-header";
+import SiteFooter from "@/components/site-footer";
 import PlaygroundSection from "@/components/sections/playground-section";
 
 export const metadata: Metadata = {
@@ -14,6 +15,7 @@ export default function PlaygroundPage() {
       <main>
         <PlaygroundSection />
       </main>
+      <SiteFooter />
     </div>
   );
 }
