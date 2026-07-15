@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import ZAI from "z-ai-web-dev-sdk";
+import { chat } from "@/lib/openrouter";
 import type {
   WardrobeAnalysisRequest,
   WardrobeAnalysisResponse,
@@ -35,12 +35,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const zai = await ZAI.create();
-    const response = await zai.chat.completions.createVision({
-      messages: [
-        {
-          role: "assistant",
-          content: `You are a fashion expert analyzing a clothing item from a photo. ${CATEGORY_INSTRUCTIONS}
+    const raw = await chat([
+      {
+        role: "assistant",
+        content: `You are a fashion expert analyzing a clothing item from a photo. ${CATEGORY_INSTRUCTIONS}
 
 Analyze the item and return ONLY a JSON object with these fields:
 {
@@ -59,19 +57,15 @@ Rules:
 - Colors should be common names (white, black, navy, cream, etc.).
 - dominantColorHex must be a valid hex like "#FFFFFF".
 - Return ONLY the JSON, no other text.`,
-        },
-        {
-          role: "user",
-          content: [
-            { type: "text", text: "Analyze this clothing item." },
-            { type: "image_url", image_url: { url: image } },
-          ],
-        },
-      ],
-      thinking: { type: "disabled" },
-    });
-
-    const raw = response.choices[0]?.message?.content?.trim() || "";
+      },
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "Analyze this clothing item." },
+          { type: "image_url", image_url: { url: image } },
+        ],
+      },
+    ]);
 
     // Parse JSON defensively
     let parsed: Record<string, unknown> = {};
