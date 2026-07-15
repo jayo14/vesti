@@ -1,3 +1,16 @@
-export default function $f() {
-  return {};
+"use client";
+
+import { useState, useEffect } from "react";
+
+export function useMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  return isMobile;
 }
