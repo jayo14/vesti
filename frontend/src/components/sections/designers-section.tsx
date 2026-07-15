@@ -1,21 +1,25 @@
 import Link from "next/link";
 
 const designers = [
-  { name: "Amina K.", label: "Streetwear", color: "bg-pink-100" },
-  { name: "Leo C.", label: "Minimalist", color: "bg-blue-100" },
-  { name: "Zara M.", label: "Avant-garde", color: "bg-purple-100" },
-  { name: "Rui T.", label: "Sustainable", color: "bg-green-100" },
+  { name: "Amina K.", label: "Streetwear", color: "bg-pink-100", pieces: 24 },
+  { name: "Leo C.", label: "Minimalist", color: "bg-blue-100", pieces: 18 },
+  { name: "Zara M.", label: "Avant-garde", color: "bg-purple-100", pieces: 31 },
+  { name: "Rui T.", label: "Sustainable", color: "bg-green-100", pieces: 15 },
+  { name: "Elena V.", label: "Luxury", color: "bg-yellow-100", pieces: 22 },
+  { name: "Samir H.", label: "Streetwear", color: "bg-orange-100", pieces: 27 },
+  { name: "Yuki T.", label: "Minimalist", color: "bg-indigo-100", pieces: 19 },
+  { name: "Nia O.", label: "Avant-garde", color: "bg-teal-100", pieces: 13 },
 ];
 
 export default function DesignersSection() {
   return (
-    <section className="bg-white py-20">
+    <section className="bg-white py-12">
       <div className="mx-auto max-w-5xl px-4">
-        <div className="mb-10 flex items-end justify-between">
+        <div className="mb-8 flex items-end justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-neutral-900 sm:text-3xl">
+            <h1 className="text-3xl font-bold text-neutral-900 sm:text-4xl">
               Independent Designers
-            </h2>
+            </h1>
             <p className="mt-2 text-neutral-600">
               Discover emerging talent and one-of-a-kind pieces.
             </p>
@@ -40,6 +44,7 @@ export default function DesignersSection() {
               </div>
               <h3 className="font-medium text-neutral-900">{d.name}</h3>
               <p className="text-sm text-neutral-500">{d.label}</p>
+              <p className="mt-1 text-xs text-neutral-400">{d.pieces} pieces</p>
             </div>
           ))}
         </div>
