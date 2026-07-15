@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import ZAI from "z-ai-web-dev-sdk";
+import { chat, generateImage } from "@/lib/openrouter";
 import type { TryOnRequest, TryOnResponse } from "@/lib/types";
 import { getMaterial, type MaterialSpec } from "@/lib/materials";
 
@@ -87,25 +87,20 @@ function buildTryOnPrompt(params: {
  */
 async function describePerson(imageDataUrl: string): Promise<string> {
   try {
-    const zai = await ZAI.create();
-    const response = await zai.chat.completions.createVision({
-      messages: [
-        {
-          role: "assistant",
-          content:
-            "You are a fashion photography assistant. Describe the person in this image concisely for an AI virtual try-on. Focus on: body type and proportions, exact pose, hair color and style, skin tone, facial features summary, current clothing (briefly), and the lighting direction/quality. Keep it under 80 words. Do not describe the background.",
-        },
-        {
-          role: "user",
-          content: [
-            { type: "text", text: "Describe this person for a virtual try-on." },
-            { type: "image_url", image_url: { url: imageDataUrl } },
-          ],
-        },
-      ],
-      thinking: { type: "disabled" },
-    });
-    const text = response.choices[0]?.message?.content?.trim() || "";
+    const text = await chat([
+      {
+        role: "assistant",
+        content:
+          "You are a fashion photography assistant. Describe the person in this image concisely for an AI virtual try-on. Focus on: body type and proportions, exact pose, hair color and style, skin tone, facial features summary, current clothing (briefly), and the lighting direction/quality. Keep it under 80 words. Do not describe the background.",
+      },
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "Describe this person for a virtual try-on." },
+          { type: "image_url", image_url: { url: imageDataUrl } },
+        ],
+      },
+    ]);
     return text.slice(0, 600);
   } catch (err) {
     console.error("describePerson failed:", err);
@@ -131,29 +126,24 @@ async function describeGarment(
     return fallbackDescription || "a stylish designer garment";
   }
   try {
-    const zai = await ZAI.create();
     const materialHint = material
       ? ` The garment is made of ${material.name} — pay special attention to how the cut and construction work with this fabric's ${material.drape} drape and ${material.sheen} sheen.`
       : "";
-    const response = await zai.chat.completions.createVision({
-      messages: [
-        {
-          role: "assistant",
-          content:
-            "You are a fashion editor. Describe this garment concisely for an AI virtual try-on. Cover: garment type (dress/top/coat/etc.), color and pattern, fabric/material appearance, fit (slim/relaxed/oversized), length, neckline/silhouette, notable details (buttons, belt, pleats, etc.). Under 80 words. Do not describe the model or background." +
-            materialHint,
-        },
-        {
-          role: "user",
-          content: [
-            { type: "text", text: "Describe this garment for a virtual try-on." },
-            { type: "image_url", image_url: { url: imageOrUrl } },
-          ],
-        },
-      ],
-      thinking: { type: "disabled" },
-    });
-    const text = response.choices[0]?.message?.content?.trim() || "";
+    const text = await chat([
+      {
+        role: "assistant",
+        content:
+          "You are a fashion editor. Describe this garment concisely for an AI virtual try-on. Cover: garment type (dress/top/coat/etc.), color and pattern, fabric/material appearance, fit (slim/relaxed/oversized), length, neckline/silhouette, notable details (buttons, belt, pleats, etc.). Under 80 words. Do not describe the model or background." +
+          materialHint,
+      },
+      {
+        role: "user",
+        content: [
+          { type: "text", text: "Describe this garment for a virtual try-on." },
+          { type: "image_url", image_url: { url: imageOrUrl } },
+        ],
+      },
+    ]);
     return text.slice(0, 600) || fallbackDescription || "a stylish designer garment";
   } catch (err) {
     console.error("describeGarment failed:", err);
@@ -202,28 +192,23 @@ export async function POST(req: NextRequest) {
       material,
     });
 
-    const zai = await ZAI.create();
-    // The upstream image-gen call can occasionally fail or return a malformed
-    // body (rate limits, transient service hiccups). Retry up to 2 times.
-    let genResponse: Awaited<ReturnType<typeof zai.images.generations.create>> | null = null;
+    let resultImage: string | null = null;
     let lastErr: unknown = null;
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        genResponse = await zai.images.generations.create({
-          prompt,
-          size: "768x1344",
-        });
-        if (genResponse?.data?.[0]?.base64) break;
+        const b64 = await generateImage(prompt, "1024x1792");
+        if (b64) {
+          resultImage = b64;
+          break;
+        }
       } catch (err) {
         lastErr = err;
         console.warn(`Image gen attempt ${attempt + 1} failed:`, err);
       }
-      // Brief backoff before retry.
       if (attempt < 2) await new Promise((r) => setTimeout(r, 1200));
     }
 
-    const base64 = genResponse?.data?.[0]?.base64;
-    if (!base64) {
+    if (!resultImage) {
       const msg =
         lastErr instanceof Error
           ? `Image generation failed: ${lastErr.message}`
@@ -234,7 +219,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const resultImage = `data:image/png;base64,${base64}`;
     const durationMs = Date.now() - start;
 
     return NextResponse.json<TryOnResponse>({
