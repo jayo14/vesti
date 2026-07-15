@@ -52,18 +52,25 @@ export async function generateImage(
   prompt: string,
   _size = "1024x1792"
 ): Promise<string | null> {
-  const res = await fetchJSON("/chat/completions", {
-    model: "x-ai/grok-imagine-image-quality",
-    messages: [{ role: "user", content: prompt }],
-    modalities: ["image", "text"],
+  const res = await fetch(`${BASE}/images`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${getKey()}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "x-ai/grok-imagine-image-quality",
+      prompt,
+      aspect_ratio: "9:16",
+      resolution: "1K",
+    }),
   });
   if (!res.ok) {
     const err = await res.text().catch(() => "Unknown error");
     throw new Error(`OpenRouter image error (${res.status}): ${err}`);
   }
   const data = await res.json();
-  const images = data.choices?.[0]?.message?.images;
-  const url = images?.[0]?.image_url?.url;
-  if (!url) return null;
-  return url.startsWith("data:") ? url : urlToBase64(url);
+  const b64 = data.data?.[0]?.b64_json;
+  if (!b64) return null;
+  return `data:image/png;base64,${b64}`;
 }
