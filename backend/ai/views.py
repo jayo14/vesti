@@ -351,7 +351,8 @@ class TryOnView(APIView):
         product_id = data.get("product_id")
         garment_image = data.get("garment_image")
         material = data.get("material")
-        height_cm = data.get("height_cm") or 170.0
+        height_cm = data.get("height_cm")
+        use_saved_profile = data.get("use_saved_profile", False)
 
         if not person_image:
             return Response(
@@ -394,15 +395,34 @@ class TryOnView(APIView):
                 parse as run_parse,
                 measurements as run_measurements,
                 garment_segment as run_garment_segment,
+                VisionEngineError,
             )
 
-            pose_resp = run_pose(person_image)
-            parse_resp = run_parse(person_image)
-            measurements_resp = run_measurements(
-                pose_resp.get("landmarks", []),
-                height_cm,
-                parse_resp.get("mask_base64") or parse_resp.get("mask_image_url"),
-            )
+            use_saved = bool(use_saved_profile) and request.user.is_authenticated
+            saved_measurements = None
+            if use_saved:
+                from accounts.models import BodyProfile
+                try:
+                    profile = BodyProfile.objects.get(user=request.user)
+                    if profile.measurements:
+                        saved_measurements = profile.measurements
+                        if not height_cm:
+                            height_cm = float(profile.height_cm)
+                except BodyProfile.DoesNotExist:
+                    use_saved = False
+
+            if saved_measurements:
+                measurements_resp = saved_measurements
+            else:
+                if not height_cm:
+                    height_cm = 170.0
+                pose_resp = run_pose(person_image)
+                parse_resp = run_parse(person_image)
+                measurements_resp = run_measurements(
+                    pose_resp.get("landmarks", []),
+                    float(height_cm),
+                    parse_resp.get("mask_base64") or parse_resp.get("mask_image_url"),
+                )
             seg_resp = run_garment_segment(
                 garment_image,
                 prompt=product.name if product else None,
