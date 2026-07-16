@@ -4,6 +4,7 @@ from django.core.mail import send_mail
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework import generics, permissions, status
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .serializers import (
@@ -15,6 +16,7 @@ from .serializers import (
     PasswordResetConfirmSerializer,
 )
 from .models import User
+from .permissions import IsDesigner
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -83,3 +85,51 @@ class UsersListView(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserListSerializer
     permission_classes = [permissions.AllowAny]
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def my_role(request):
+    return Response({
+        'is_designer': request.user.is_designer,
+        'is_staff': request.user.is_staff,
+        'is_superuser': request.user.is_superuser,
+        'username': request.user.username,
+        'email': request.user.email,
+    })
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def become_designer(request):
+    user = request.user
+    if user.is_designer:
+        return Response({'detail': 'Already a designer.'}, status=status.HTTP_400_BAD_REQUEST)
+    user.is_designer = True
+    user.save()
+    return Response({'detail': 'You are now a designer.', 'is_designer': True})
+
+
+class DesignerDashboardView(APIView):
+    permission_classes = [permissions.IsAuthenticated, IsDesigner]
+
+    def get(self, request):
+        from products.models import Product
+        from orders.models import Order
+        from payments.models import DesignerEarning
+
+        products = Product.objects.filter(designer=request.user)
+        orders_with_items = Order.objects.filter(items__contains=[{'sellerId': str(request.user.id)}])
+        earnings = DesignerEarning.objects.filter(designer=request.user, status='available')
+        total_available = sum(e.net_amount for e in earnings)
+
+        return Response({
+            'products_count': products.count(),
+            'orders_count': orders_with_items.count(),
+            'available_balance': str(total_available),
+            'products': [{'id': p.id, 'name': p.name, 'price': str(p.price)} for p in products],
+            'recent_orders': [
+                {'id': o.id, 'status': o.status, 'total': str(o.total)}
+                for o in orders_with_items.order_by('-created_at')[:10]
+            ],
+        })
