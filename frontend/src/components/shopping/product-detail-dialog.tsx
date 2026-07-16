@@ -289,6 +289,9 @@ function ProductDetailContent({
                       Preorder — {product.shipsWithin}
                     </p>
                   )}
+                  {product.stockCount > 0 && product.stockCount <= 5 && (
+                    <p className="text-xs text-amber-600 mt-1">Only {product.stockCount} left in stock</p>
+                  )}
                 </div>
 
                 {/* Description preview */}
