@@ -72,24 +72,36 @@ export interface SavedLook {
   material?: MaterialId;
 }
 
+export interface FitAnalysis {
+  estimated_fit: "true_to_size" | "runs_small" | "runs_large";
+  sleeve_note: string;
+  waist_note: string;
+  recommended_size: string | null;
+  style_match_pct: number;
+}
+
 export interface TryOnRequest {
-  personImage: string; // base64 data URL
-  garmentImage: string; // base64 data URL or remote URL
-  garmentDescription?: string;
-  preservePose: boolean;
-  preserveLighting: boolean;
-  /** Selected fabric material — drives material-aware AI generation */
+  /** base64 data URL or remote URL of the person photo */
+  person_image: string;
+  /** Optional: product id from the marketplace */
+  product_id?: number | string;
+  /** Optional: explicit garment image when not using a product */
+  garment_image?: string;
+  /** Selected fabric material override */
   material?: MaterialId;
+  /** Person height in cm for measurement estimation (default 170) */
+  height_cm?: number;
 }
 
 export interface TryOnResponse {
   success: boolean;
-  resultImage?: string; // base64 data URL
+  result_image?: string;
+  fit_analysis?: FitAnalysis;
+  fit_confidence?: number;
+  model?: string;
+  generation_id?: number;
   error?: string;
-  meta?: {
-    durationMs: number;
-    model: string;
-  };
+  hint?: string;
 }
 
 // ===========================================================================
