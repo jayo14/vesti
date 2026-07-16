@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { useWardrobeStore } from "@/lib/wardrobe-store";
 import { useShoppingStore } from "@/lib/shopping-store";
-import { getProductById } from "@/lib/products";
+import { useProducts } from "@/lib/api/products";
 import type {
   OutfitRecommendation,
   OutfitRecommendationResponse,
@@ -83,6 +83,8 @@ export function OutfitRecommender({ onOpenProduct }: OutfitRecommenderProps) {
     setIsGeneratingOutfits,
   } = useWardrobeStore();
   const { setSmartSearchActive } = useShoppingStore();
+  const { data: allProducts = [] } = useProducts();
+  const productById = new Map(allProducts.map((p) => [p.id, p]));
 
   const [occasionInput, setOccasionInput] = useState(outfitRequest.occasion);
 
@@ -310,6 +312,7 @@ export function OutfitRecommender({ onOpenProduct }: OutfitRecommenderProps) {
                 outfit={outfit}
                 index={i}
                 wardrobeItems={items}
+                productById={productById}
                 onOpenProduct={onOpenProduct}
               />
             ))}
@@ -339,11 +342,13 @@ function OutfitCard({
   outfit,
   index,
   wardrobeItems,
+  productById,
   onOpenProduct,
 }: {
   outfit: OutfitRecommendation;
   index: number;
   wardrobeItems: ReturnType<typeof useWardrobeStore>["items"];
+  productById: Map<string, Product>;
   onOpenProduct: (p: Product) => void;
 }) {
   const outfitItems = outfit.wardrobeItemIds
@@ -420,7 +425,7 @@ function OutfitCard({
           </div>
           <div className="space-y-2">
             {outfit.marketplaceSuggestions.map((sug, i) => {
-              const product = getProductById(sug.productId);
+              const product = productById.get(sug.productId);
               if (!product) return null;
               return (
                 <button
