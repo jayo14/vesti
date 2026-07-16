@@ -1,0 +1,119 @@
+==============================================================================
+ VESTI — MODEL MANIFEST
+==============================================================================
+This file lists every ML model required by the Vesti app and the vision_engine
+CV pipeline, the format it must be delivered in, where it is loaded from, and
+the module that consumes it.
+
+The Django backend (./backend) ships NO local ML models — all "AI" there
+(chat, smart search, outfit recommendations, styling tips) is served through
+the OpenRouter LLM proxy. The only on-disk models in this repo live under
+vision_engine/models/ and are loaded by the FastAPI pipeline.
+
+Default model directory:   vision_engine/models/   (config: VISION_MODELS_DIR)
+Override each path via:    VISION_<NAME>_MODEL_PATH
+
+==============================================================================
+ REQUIRED MODELS (vision_engine)
+==============================================================================
+
+1) detection  ->  ./models/detection.onnx
+   -------------------------------------------------------------------------
+   Model     : YOLOv11n (Ultralytics)
+   Task      : Person detection (and garment boxes)
+   Format    : ONNX  (also accepted: *.pt Ultralytics weights)
+   Loaded by : detection/service.py  (ultralytics.YOLO)
+   Notes     : Runs on CPU. Single 'person' box required; multi-person is
+              rejected (MVP). Hosted Replicate fallback if configured.
+
+2) pose  ->  ./models/pose.onnx
+   -------------------------------------------------------------------------
+   Model     : MediaPipe Pose (BlazePose, 33 landmarks)
+   Task      : 33-point full-body pose + per-point visibility
+   Format    : ONNX / TFLite  (also accepted: MediaPipe bundled .task)
+   Loaded by : pose/service.py  (mediapipe.solutions.pose)
+   Notes     : CPU. Key joints (shoulders/hips/knees) gated on visibility.
+
+3) parsing  ->  ./models/parsing.onnx   (+ ./models/parse_runner.py)
+   -------------------------------------------------------------------------
+   Model     : SCHP (Self-Correction Human Parsing) or SegFormer parser
+   Task      : Per-pixel human parsing -> head/torso/arms/legs/background
+   Format    : PyTorch  (*.pth/*.pt) or ONNX; parse_runner.py wraps it
+   Loaded by : parsing/service.py  (calls models/parse_runner.py)
+   Notes     : Heavy — prefer hosted provider or a GPU box.
+
+4) garment segmentation  ->  ./models/garment_segment.onnx
+   -------------------------------------------------------------------------
+   Model     : SAM2 + Grounding DINO (text-prompted)
+   Task      : Cutout + alpha mask + bounding polygon for a garment category
+   Format    : PyTorch (*.pt/*.pth) or ONNX
+   Loaded by : garments/service.py  (segment_anything + groundingdino)
+   Notes     : RMBG-2.0 pass added for product-photo (white-bg) cleanup.
+              Hosted Replicate fallback if configured.
+
+5) try-on  ->  ./models/tryon.onnx
+   -------------------------------------------------------------------------
+   Model     : IDM-VTON (primary), CatVTON (lighter fallback)
+   Task      : Image-to-image garment warping/compositing onto real person
+   Format    : PyTorch (diffusers pipeline) or ONNX
+   Loaded by : tryon/service.py  (torch + diffusers)
+   Notes     : HOSTED PREFERRED. Logs which model actually served the request.
+              Falls back to CatVTON on timeout/failure.
+
+6) enhancement  ->  ./models/enhance.onnx
+   -------------------------------------------------------------------------
+   Model     : Real-ESRGAN (x2/x4 super-resolution + denoise)
+   Task      : Final polish pass on the try-on output
+   Format    : PyTorch (basicsr RRDBNet) or ONNX
+   Loaded by : enhancement/service.py  (realesrgan / basicsr)
+   Notes     : Hosted Replicate fallback if configured.
+
+==============================================================================
+ OPTIONAL / SUPPORTING ARTIFACTS
+==============================================================================
+
+- ./models/parse_runner.py
+    Wrapper script exposing parse(img) -> label_map for the parsing module.
+    Required only when running SCHP/SegFormer locally. Not a model weight.
+
+- ./models/rmbg/
+    RMBG-2.0 weights used by the garment product-photo cleanup pass.
+    Format: ONNX / PyTorch.
+
+- Hosted-inference providers (no local file needed):
+    VISION_HOSTED_PROVIDER = replicate | fal | hf | runpod
+    VISION_HOSTED_API_KEY   = <api key>
+    VISION_HOSTED_ENDPOINT  = <optional custom endpoint>
+    When set, the heavy models (try-on, garment seg, parsing, enhancement)
+    are called by API and the local .onnx/.pt files above are NOT required.
+
+==============================================================================
+ SUPPORTED FORMATS BY MODULE
+==============================================================================
+
+  Module            | Preferred | Also accepted
+  ------------------|-----------|-----------------------------------
+  detection         | ONNX      | Ultralytics *.pt
+  pose              | ONNX      | TFLite, MediaPipe .task
+  parsing           | PyTorch   | ONNX (via parse_runner.py)
+  garment_segment   | PyTorch   | ONNX
+  tryon             | PyTorch   | ONNX
+  enhancement       | PyTorch   | ONNX
+
+==============================================================================
+ DOWNLOAD / PLACE CHECKLIST
+==============================================================================
+
+  [ ] models/detection.onnx        (YOLOv11n)
+  [ ] models/pose.onnx             (MediaPipe Pose)
+  [ ] models/parsing.onnx          (SCHP / SegFormer)
+  [ ] models/parse_runner.py       (SCHP wrapper)
+  [ ] models/garment_segment.onnx  (SAM2 + Grounding DINO)
+  [ ] models/tryon.onnx            (IDM-VTON)
+  [ ] models/enhance.onnx          (Real-ESRGAN)
+  [ ] models/rmbg/                  (RMBG-2.0, optional)
+
+The .gitignore excludes vision_engine/models/ — these weights are fetched at
+deploy time (huggingface-cli / replicate / object storage), never committed.
+
+==============================================================================
