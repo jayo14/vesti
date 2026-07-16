@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, Sparkles, AlertTriangle, Clock, Flag, ImageIcon, Check } from "lucide-react";
+import { Loader2, Sparkles, AlertTriangle, Clock, Flag, ImageIcon, Expand } from "lucide-react";
 import { toast } from "sonner";
 import { useAuthStore } from "@/lib/auth-store";
 import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { AdminAIHealth, AdminGeneration } from "@/lib/types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
@@ -31,6 +32,7 @@ export function AdminGenerationsSection() {
   const [galleryLoading, setGalleryLoading] = useState(false);
   const [flaggedFilter, setFlaggedFilter] = useState<"all" | "flagged" | "unflagged">("all");
   const [flipping, setFlipping] = useState<number | null>(null);
+  const [preview, setPreview] = useState<AdminGeneration | null>(null);
 
   useEffect(() => {
     if (!token || tab !== "health") return;
@@ -78,6 +80,7 @@ export function AdminGenerationsSection() {
         setGallery((prev) =>
           prev.map((g) => (g.id === id ? { ...g, flagged: data.flagged } : g)),
         );
+        if (preview?.id === id) setPreview((p) => p ? { ...p, flagged: data.flagged } : p);
         toast.success(data.flagged ? "Flagged for review" : "Flag removed");
       } else {
         toast.error("Failed to toggle flag");
@@ -241,7 +244,7 @@ export function AdminGenerationsSection() {
                     "rounded-2xl bg-muted/40 border overflow-hidden group relative",
                     gen.flagged ? "border-red-500/40 ring-1 ring-red-500/20" : "border-border",
                   )}>
-                  <div className="aspect-[3/4] bg-muted flex items-center justify-center overflow-hidden">
+                  <button onClick={() => setPreview(gen)} className="w-full aspect-[3/4] bg-muted flex items-center justify-center overflow-hidden relative">
                     {gen.result_image ? (
                       <img src={gen.result_image} alt="Generation"
                         className="w-full h-full object-cover" />
@@ -251,7 +254,10 @@ export function AdminGenerationsSection() {
                     ) : (
                       <ImageIcon className="w-6 h-6 text-muted-foreground" />
                     )}
-                  </div>
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                      <Expand className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </button>
                   <div className="p-2 space-y-1">
                     <div className="text-[10px] text-muted-foreground truncate">
                       {gen.user_username}{gen.product_name ? ` · ${gen.product_name}` : ""}
@@ -289,6 +295,84 @@ export function AdminGenerationsSection() {
           )}
         </div>
       )}
+
+      <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              Generation #{preview?.id}
+              {preview?.flagged && (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/10 text-red-500 font-medium">Flagged</span>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          {preview && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Person</div>
+                  <div className="aspect-[3/4] rounded-xl bg-muted overflow-hidden">
+                    {preview.person_image ? (
+                      <img src={preview.person_image} alt="Person" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center"><ImageIcon className="w-6 h-6" /></div>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Garment</div>
+                  <div className="aspect-[3/4] rounded-xl bg-muted overflow-hidden">
+                    {preview.garment_image ? (
+                      <img src={preview.garment_image} alt="Garment" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center"><ImageIcon className="w-6 h-6" /></div>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Result</div>
+                  <div className="aspect-[3/4] rounded-xl bg-muted overflow-hidden relative">
+                    {preview.result_image ? (
+                      <img src={preview.result_image} alt="Result" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center"><ImageIcon className="w-6 h-6" /></div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <MetaRow label="User" value={preview.user_username} />
+                <MetaRow label="Product" value={preview.product_name || "—"} />
+                <MetaRow label="Status" value={preview.status} />
+                <MetaRow label="Latency" value={preview.latency_ms ? `${preview.latency_ms} ms` : "—"} />
+                <MetaRow label="Model" value={preview.model || "—"} />
+                <MetaRow label="Fit confidence" value={preview.fit_confidence ? `${(preview.fit_confidence * 100).toFixed(0)}%` : "—"} />
+              </div>
+              <div className="flex items-center justify-end">
+                <button onClick={() => toggleFlag(preview.id)} disabled={flipping === preview.id}
+                  className={cn(
+                    "inline-flex items-center gap-1 px-3 py-1.5 text-xs rounded-full font-medium transition-colors",
+                    preview.flagged
+                      ? "bg-red-500/10 text-red-500 hover:bg-red-500/20"
+                      : "bg-muted text-muted-foreground hover:text-foreground",
+                  )}>
+                  {flipping === preview.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Flag className="w-3 h-3" />}
+                  {preview.flagged ? "Remove flag" : "Flag as inappropriate"}
+                </button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function MetaRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg bg-muted/40 px-3 py-2">
+      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
+      <div className="text-sm">{value}</div>
     </div>
   );
 }
