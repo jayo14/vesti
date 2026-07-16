@@ -38,3 +38,34 @@ class DesignerApplication(models.Model):
 
     def __str__(self):
         return f"{self.brand_name} ({self.user.username}) — {self.status}"
+
+
+class BodyProfile(models.Model):
+    SHAPE_CHOICES = [
+        ("hourglass", "Hourglass"),
+        ("pear", "Pear / Triangle"),
+        ("apple", "Apple / Round"),
+        ("rectangle", "Rectangle / Straight"),
+        ("inverted_triangle", "Inverted Triangle"),
+    ]
+
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="body_profile",
+    )
+    height_cm = models.DecimalField(max_digits=5, decimal_places=1)
+    weight_kg = models.DecimalField(
+        max_digits=5, decimal_places=1, null=True, blank=True,
+    )
+    body_shape = models.CharField(
+        max_length=20, choices=SHAPE_CHOICES, blank=True, default="",
+    )
+    measurements = models.JSONField(default=dict, blank=True)
+    reference_image = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-updated_at"]
+
+    def __str__(self):
+        return f"BodyProfile({self.user.username}, {self.height_cm}cm)"
