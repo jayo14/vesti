@@ -28,8 +28,10 @@ export function AdminSection() {
   } = usePaymentStore();
 
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"dashboard" | "transactions" | "payouts">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "transactions" | "payouts" | "users">("dashboard");
   const [processingPayouts, setProcessingPayouts] = useState<number[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
+  const [updatingUser, setUpdatingUser] = useState<number | null>(null);
 
   const fetchData = async () => {
     const token = localStorage.getItem("auth_token");
@@ -53,6 +55,35 @@ export function AdminSection() {
   };
 
   useEffect(() => { fetchData(); }, []);
+
+  const fetchUsers = async () => {
+    const token = localStorage.getItem("auth_token");
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/users/`, { headers: { Authorization: `Bearer ${token}` } });
+      if (res.ok) setUsers(await res.json());
+    } catch {}
+  };
+
+  useEffect(() => {
+    if (activeTab === "users") fetchUsers();
+  }, [activeTab]);
+
+  const toggleUserRole = async (userId: number, field: string) => {
+    const token = localStorage.getItem("auth_token");
+    if (!token) return;
+    setUpdatingUser(userId);
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/users/${userId}/`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ [field]: !users.find((u) => u.id === userId)?.[field] }),
+      });
+      if (res.ok) fetchUsers();
+      else toast.error("Failed to update user");
+    } catch { toast.error("Failed"); }
+    finally { setUpdatingUser(null); }
+  };
 
   const processPayout = async (id: number) => {
     setProcessingPayouts((prev) => [...prev, id]);
@@ -81,6 +112,7 @@ export function AdminSection() {
     { id: "dashboard" as const, label: "Dashboard", icon: BarChart3 },
     { id: "transactions" as const, label: "Transactions", icon: ShoppingCart },
     { id: "payouts" as const, label: "Payouts", icon: ArrowUpRight },
+    { id: "users" as const, label: "Users", icon: Users },
   ];
 
   return (
@@ -157,6 +189,35 @@ export function AdminSection() {
                           {tx.user_username} · {tx.payment_method || "bank_transfer"} · {new Date(tx.created_at).toLocaleDateString()}
                         </div>
                         {tx.virtual_account_number && <div className="text-xs text-muted-foreground mt-1">Acct: {tx.virtual_bank_name} · {tx.virtual_account_number}</div>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {activeTab === "users" && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                {users.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-12 text-center">No users found</p>
+                ) : (
+                  <div className="space-y-2">
+                    {users.map((u) => (
+                      <div key={u.id} className="flex items-center justify-between p-4 rounded-2xl bg-muted/40">
+                        <div>
+                          <div className="text-sm font-medium">{u.username}</div>
+                          <div className="text-xs text-muted-foreground">{u.email}</div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => toggleUserRole(u.id, "is_designer")} disabled={updatingUser === u.id}
+                            className={cn("text-xs px-2 py-1 rounded-full font-medium transition-colors", u.is_designer ? "bg-champagne/20 text-champagne" : "bg-muted text-muted-foreground")}>
+                            {updatingUser === u.id ? <Loader2 className="w-3 h-3 animate-spin" /> : u.is_designer ? "Designer" : "User"}
+                          </button>
+                          <button onClick={() => toggleUserRole(u.id, "is_staff")} disabled={updatingUser === u.id}
+                            className={cn("text-xs px-2 py-1 rounded-full font-medium transition-colors", u.is_staff ? "bg-blue-500/20 text-blue-500" : "bg-muted text-muted-foreground")}>
+                            {u.is_staff ? "Staff" : "—"}
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
