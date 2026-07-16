@@ -104,6 +104,8 @@ export function SiteHeader() {
               {token ? (
                 <div className="flex items-center gap-1">
                   <span className="hidden sm:block text-xs text-muted-foreground">{user?.username}</span>
+                  {isDesigner() && <span className="hidden sm:inline text-[10px] px-1.5 py-0.5 rounded-full bg-champagne/20 text-champagne font-medium">D</span>}
+                  {isAdmin() && <span className="hidden sm:inline text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-500 font-medium">A</span>}
                   <button onClick={logout}
                     className="px-3 py-1.5 text-xs rounded-full border hover:bg-foreground/5 transition-colors">
                     Logout
