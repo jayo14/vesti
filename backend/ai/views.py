@@ -43,33 +43,47 @@ class OutfitRecommendView(APIView):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        # Fetch wardrobe items — if user is authenticated, filter by user;
-        # otherwise use the explicit wardrobe_item_ids from the request.
-        if request.user.is_authenticated:
-            items = WardrobeItem.objects.filter(user=request.user)
-            if data.get("wardrobe_item_ids"):
-                items = items.filter(id__in=data["wardrobe_item_ids"])
-        elif data.get("wardrobe_item_ids"):
-            items = WardrobeItem.objects.filter(id__in=data["wardrobe_item_ids"])
+        # Prefer inline wardrobeItems from the frontend payload over DB lookup.
+        wardrobe_summary = ""
+        inline_items = data.get("wardrobeItems")
+        if inline_items:
+            wardrobe_lines = []
+            for i, item in enumerate(inline_items):
+                colors = ", ".join(item.get("colors", [])) or "unknown"
+                style_tags = ", ".join(item.get("styleTags", [])) or "unknown"
+                seasons = ", ".join(item.get("seasons", [])) or "unknown"
+                wardrobe_lines.append(
+                    f"{i+1}. {item.get('name', 'Unknown')} ({item.get('category', 'unknown')}) "
+                    f"-- colors: {colors}, style: {style_tags}, seasons: {seasons}"
+                )
+            wardrobe_summary = "\n".join(wardrobe_lines)
         else:
-            items = WardrobeItem.objects.none()
-        if not items.exists():
+            # Fallback to database fetch
+            if request.user.is_authenticated:
+                items = WardrobeItem.objects.filter(user=request.user)
+                if data.get("wardrobe_item_ids"):
+                    items = items.filter(id__in=data["wardrobe_item_ids"])
+            elif data.get("wardrobe_item_ids"):
+                items = WardrobeItem.objects.filter(id__in=data["wardrobe_item_ids"])
+            else:
+                items = WardrobeItem.objects.none()
+            if items.exists():
+                wardrobe_lines = []
+                for i, item in enumerate(items):
+                    colors = item.color or "unknown"
+                    tags = getattr(item, "category", "") or "unknown"
+                    seasons = ""
+                    wardrobe_lines.append(
+                        f"{i+1}. [ID:{item.id}] {item.name} ({item.category}) "
+                        f"-- colors: {colors}, style: {tags}, seasons: {seasons}"
+                    )
+                wardrobe_summary = "\n".join(wardrobe_lines)
+
+        if not wardrobe_summary:
             return Response(
                 {"success": False, "error": "Add clothes to your wardrobe first so the AI can suggest outfits."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        # Build wardrobe summary for the LLM
-        wardrobe_lines = []
-        for i, item in enumerate(items):
-            colors = item.color or "unknown"
-            tags = getattr(item, "category", "") or "unknown"
-            seasons = ""
-            wardrobe_lines.append(
-                f"{i+1}. [ID:{item.id}] {item.name} ({item.category}) "
-                f"-- colors: {colors}, style: {tags}, seasons: {seasons}"
-            )
-        wardrobe_summary = "\n".join(wardrobe_lines)
 
         # Fetch marketplace products for gap-fill suggestions
         marketplace_products = Product.objects.filter(is_published=True)[:16]

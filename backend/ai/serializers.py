@@ -23,6 +23,15 @@ class WardrobeAnalyzeSerializer(serializers.Serializer):
     analysis = serializers.JSONField()
 
 
+class WardrobeItemField(serializers.Serializer):
+    id = serializers.IntegerField(required=False)
+    name = serializers.CharField(required=False, allow_blank=True, default="")
+    category = serializers.CharField(required=False, allow_blank=True, default="")
+    colors = serializers.ListField(child=serializers.CharField(), required=False, default=list)
+    styleTags = serializers.ListField(child=serializers.CharField(), required=False, default=list)
+    seasons = serializers.ListField(child=serializers.CharField(), required=False, default=list)
+
+
 class OutfitRecommendSerializer(serializers.Serializer):
     occasion = serializers.CharField(required=True)
     weather = serializers.ChoiceField(
@@ -42,6 +51,9 @@ class OutfitRecommendSerializer(serializers.Serializer):
     )
     wardrobe_item_ids = serializers.ListField(
         child=serializers.IntegerField(), required=False
+    )
+    wardrobeItems = serializers.ListField(
+        child=WardrobeItemField(), required=False
     )
 
 
