@@ -1,0 +1,29 @@
+# Vesti — local multi-service stack
+#
+# Runs the Django backend (8000) and the Vision Engine FastAPI service (8100).
+
+services:
+  backend:
+    build:
+      context: ./backend
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=1
+    volumes:
+      - ./backend:/app
+
+  vision_engine:
+    build:
+      context: ./vision_engine
+    command: uvicorn vision_engine.main:app --host 0.0.0.0 --port 8100 --reload
+    ports:
+      - "8100:8100"
+    environment:
+      - VISION_HOST=0.0.0.0
+      - VISION_PORT=8100
+      - VISION_CORS_ORIGINS=http://localhost:3000,http://localhost:8000
+      - VISION_DEVICE=cpu
+    volumes:
+      - ./vision_engine:/app
