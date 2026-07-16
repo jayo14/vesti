@@ -317,7 +317,7 @@ export function CheckoutDialog({
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <button onClick={checkPaymentStatus} disabled={checkingPayment} className="w-full py-3 rounded-full bg-foreground text-background text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 inline-flex items-center justify-center gap-2">
+                  <button onClick={() => checkPaymentStatus()} disabled={checkingPayment} className="w-full py-3 rounded-full bg-foreground text-background text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 inline-flex items-center justify-center gap-2">
                     {checkingPayment ? <><Loader2 className="w-4 h-4 animate-spin" /> Checking...</> : <><ExternalLink className="w-4 h-4" /> I've made the transfer — Check status</>}
                   </button>
                   {paymentStatus === "paid" && (

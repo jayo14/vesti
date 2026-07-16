@@ -16,6 +16,7 @@ import {
 import { usePaymentStore } from "@/lib/payment-store";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useAuthStore } from "@/lib/auth-store";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -26,6 +27,7 @@ export function AdminSection() {
     adminTransactions, setAdminTransactions,
     adminPayouts, setAdminPayouts,
   } = usePaymentStore();
+  const token = useAuthStore((s) => s.token);
 
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"dashboard" | "transactions" | "payouts" | "users">("dashboard");

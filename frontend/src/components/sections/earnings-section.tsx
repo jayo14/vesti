@@ -16,6 +16,7 @@ import { usePaymentStore } from "@/lib/payment-store";
 import type { PayoutMethodRecord } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useAuthStore } from "@/lib/auth-store";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -27,6 +28,8 @@ export function EarningsSection() {
     payouts, setPayouts,
     payoutMethods, setPayoutMethods,
   } = usePaymentStore();
+  const token = useAuthStore((s) => s.token);
+  const logout = useAuthStore((s) => s.logout);
 
   const [loading, setLoading] = useState(true);
   const [showAddMethod, setShowAddMethod] = useState(false);
@@ -35,7 +38,6 @@ export function EarningsSection() {
   const [payoutAmount, setPayoutAmount] = useState("");
 
   const fetchData = async () => {
-    const token = localStorage.getItem("auth_token");
     if (!token) return;
     setLoading(true);
     try {
@@ -46,6 +48,11 @@ export function EarningsSection() {
         fetch(`${API_BASE}/api/payouts/history/`, { headers }),
         fetch(`${API_BASE}/api/payout-methods/`, { headers }),
       ]);
+      if (summaryRes.status === 401 || earningsRes.status === 401 || payoutsRes.status === 401 || methodsRes.status === 401) {
+        logout();
+        toast.error("Session expired, please sign in again");
+        return;
+      }
       if (summaryRes.ok) setEarningsSummary(await summaryRes.json());
       if (earningsRes.ok) setEarnings(await earningsRes.json());
       if (payoutsRes.ok) setPayouts(await payoutsRes.json());
@@ -57,10 +64,9 @@ export function EarningsSection() {
     }
   };
 
-  useEffect(() => { if (earningsSummary === null) fetchData(); }, []);
+  useEffect(() => { if (earningsSummary === null && token) fetchData(); }, [token]);
 
   const addPayoutMethod = async () => {
-    const token = localStorage.getItem("auth_token");
     if (!token || !newMethod.bank_name || !newMethod.bank_account_number || !newMethod.bank_account_name) return;
     try {
       const res = await fetch(`${API_BASE}/api/payout-methods/`, {
@@ -82,7 +88,6 @@ export function EarningsSection() {
   };
 
   const requestPayout = async () => {
-    const token = localStorage.getItem("auth_token");
     if (!token || !payoutAmount) return;
     setRequesting(true);
     try {

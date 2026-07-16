@@ -67,3 +67,5 @@ env
 .env
 .venv
 
+frontend/3001
+frontend/prisma/dev.db

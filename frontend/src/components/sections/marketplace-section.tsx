@@ -15,7 +15,6 @@ import { PRODUCTS } from "@/lib/products";
 import type { Product } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { ProductCard } from "@/components/shopping/product-card";
-import { ProductDetailDialog } from "@/components/shopping/product-detail-dialog";
 import { SmartSearchBar } from "@/components/shopping/smart-search-bar";
 import { SmartSearchResults } from "@/components/shopping/smart-search-results";
 
@@ -49,11 +48,10 @@ export function MarketplaceSection() {
     setGarmentSource,
     setSelectedMaterial,
     setView,
+    openProductPage,
   } = useStudioStore();
   const { cartCount, smartSearchActive, smartSearchResult } = useShoppingStore();
   const [sort, setSort] = useState("featured");
-  const [openProduct, setOpenProduct] = useState<Product | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
 
   const showSmartResults =
     smartSearchActive && (smartSearchResult || smartSearchResult === null);
@@ -118,8 +116,7 @@ export function MarketplaceSection() {
   };
 
   const handleOpenProduct = (p: Product) => {
-    setOpenProduct(p);
-    setDetailOpen(true);
+    openProductPage(p.id);
   };
 
   return (
@@ -300,13 +297,6 @@ export function MarketplaceSection() {
           </div>
         </motion.div>
       </div>
-
-      <ProductDetailDialog
-        product={openProduct}
-        open={detailOpen}
-        onOpenChange={setDetailOpen}
-        onOpenProduct={(p) => setOpenProduct(p)}
-      />
     </section>
   );
 }

@@ -15,16 +15,27 @@ import { PlaygroundSection } from "@/components/sections/playground-section";
 import { EarningsSection } from "@/components/sections/earnings-section";
 import { AdminSection } from "@/components/sections/admin-section";
 import { DesignerDashboardSection } from "@/components/sections/designer-dashboard-section";
+import { ProductPageSection } from "@/components/sections/product-page-section";
+import { getProductById } from "@/lib/products";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 export default function Home() {
   const view = useStudioStore((s) => s.view);
+  const selectedProductId = useStudioStore((s) => s.selectedProductId);
   const theme = useStudioStore((s) => s.theme);
   const fetchUser = useAuthStore((s) => s.fetchUser);
+  const openProductPage = useStudioStore((s) => s.openProductPage);
   const token = useAuthStore((s) => s.token);
 
   useEffect(() => { if (token) fetchUser(); }, []);
+
+  // Deep-link support: /?product=<id> opens the dedicated product page.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const pid = params.get("product");
+    if (pid && getProductById(pid)) openProductPage(pid);
+  }, [openProductPage]);
 
   useEffect(() => {
     if (typeof document !== "undefined") {
@@ -54,6 +65,11 @@ export default function Home() {
             {view === "earnings" && <EarningsSection />}
             {view === "admin" && <AdminSection />}
             {view === "designer-dashboard" && <DesignerDashboardSection />}
+            {view === "product" &&
+              (() => {
+                const p = selectedProductId ? getProductById(selectedProductId) : undefined;
+                return p ? <ProductPageSection product={p} /> : <MarketplaceSection />;
+              })()}
           </motion.div>
         </AnimatePresence>
       </main>
