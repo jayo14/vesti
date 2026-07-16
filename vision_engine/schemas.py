@@ -156,6 +156,18 @@ class GarmentMetadata(BaseModel):
     material: Optional[str] = None
     fit_type: FitType = FitType.regular
     size: Optional[str] = None
+    size_chart: Optional[dict] = Field(
+        None,
+        description="Optional declared size chart, e.g. {'S': {'chest_cm': 92, 'waist_cm': 76}, ...}.",
+    )
+
+
+class FitAnalysis(BaseModel):
+    estimated_fit: Literal["true_to_size", "runs_small", "runs_large"]
+    sleeve_note: str = ""
+    waist_note: str = ""
+    recommended_size: Optional[str] = None
+    style_match_pct: float = Field(0.0, ge=0.0, le=100.0)
 
 
 class TryOnRequest(BaseModel):
@@ -169,6 +181,7 @@ class TryOnResponse(BaseModel):
     result_image_url: Optional[str] = None
     result_base64: Optional[str] = None
     fit_confidence: float = Field(..., ge=0.0, le=1.0)
+    fit_analysis: Optional[FitAnalysis] = None
     model: str = "stub-tryon"
 
 
