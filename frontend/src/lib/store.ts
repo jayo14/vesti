@@ -3,7 +3,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type {
-  ViewMode,
   ComparisonMode,
   Garment,
   SavedLook,
@@ -14,14 +13,6 @@ import type {
 import type { MaterialId } from "@/lib/materials";
 
 interface StudioState {
-  // Navigation
-  view: ViewMode;
-  setView: (view: ViewMode) => void;
-  /** Product id for the dedicated product page view. */
-  selectedProductId: string | null;
-  /** Navigate to the individual product page. */
-  openProductPage: (productId: string) => void;
-
   // Person photo
   personImage: string | null;
   setPersonImage: (img: string | null) => void;
@@ -110,11 +101,6 @@ interface StudioState {
 export const useStudioStore = create<StudioState>()(
   persist(
     (set) => ({
-      view: "hero",
-      setView: (view) => set({ view }),
-      selectedProductId: null,
-      openProductPage: (productId) => set({ view: "product", selectedProductId: productId }),
-
       personImage: null,
       setPersonImage: (personImage) => set({ personImage }),
 

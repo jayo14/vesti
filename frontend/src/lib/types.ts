@@ -2,18 +2,6 @@
 
 import type { MaterialId } from "./materials";
 
-export type ViewMode =
-  | "hero"
-  | "studio"
-  | "marketplace"
-  | "designers"
-  | "wardrobe"
-  | "playground"
-  | "earnings"
-  | "admin"
-  | "designer-dashboard"
-  | "product";
-
 export type ComparisonMode = "before-after" | "side-by-side" | "slider";
 
 export type GarmentCategory =
