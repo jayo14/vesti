@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { useShoppingStore } from "@/lib/shopping-store";
 import { usePaymentStore } from "@/lib/payment-store";
+import { useAuthStore } from "@/lib/auth-store";
 import type { CheckoutRequest, CheckoutResponse, InitiatePaymentRequest, VirtualAccountResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -55,6 +56,7 @@ export function CheckoutDialog({
 }: CheckoutDialogProps) {
   const { cart, clearCart } = useShoppingStore();
   const { setCurrentTransaction, virtualAccount, setPaymentStatus, paymentStatus, clearPayment } = usePaymentStore();
+  const token = useAuthStore((s) => s.token);
   const [step, setStep] = useState<Step>("shipping");
   const [submitting, setSubmitting] = useState(false);
   const [checkingPayment, setCheckingPayment] = useState(false);
@@ -108,7 +110,6 @@ export function CheckoutDialog({
         customer_last_name: shipping.fullName.split(" ").slice(1).join(" ") || "",
       };
 
-      const token = localStorage.getItem("auth_token");
       const payRes = await fetch(`${API_BASE}/api/payments/initiate/`, {
         method: "POST",
         headers: {
@@ -145,7 +146,6 @@ export function CheckoutDialog({
     if (!tid) return;
     setCheckingPayment(true);
     try {
-      const token = localStorage.getItem("auth_token");
       const res = await fetch(`${API_BASE}/api/payments/${tid}/status/`, {
         headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       });

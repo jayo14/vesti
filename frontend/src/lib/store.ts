@@ -16,6 +16,10 @@ interface StudioState {
   // Navigation
   view: ViewMode;
   setView: (view: ViewMode) => void;
+  /** Product id for the dedicated product page view. */
+  selectedProductId: string | null;
+  /** Navigate to the individual product page. */
+  openProductPage: (productId: string) => void;
 
   // Person photo
   personImage: string | null;
@@ -105,6 +109,8 @@ export const useStudioStore = create<StudioState>()(
     (set) => ({
       view: "hero",
       setView: (view) => set({ view }),
+      selectedProductId: null,
+      openProductPage: (productId) => set({ view: "product", selectedProductId: productId }),
 
       personImage: null,
       setPersonImage: (personImage) => set({ personImage }),

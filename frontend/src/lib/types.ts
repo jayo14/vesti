@@ -11,7 +11,8 @@ export type ViewMode =
   | "playground"
   | "earnings"
   | "admin"
-  | "designer-dashboard";
+  | "designer-dashboard"
+  | "product";
 
 export type ComparisonMode = "before-after" | "side-by-side" | "slider";
 
