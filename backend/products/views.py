@@ -12,10 +12,12 @@ class ProductViewSet(viewsets.ModelViewSet):
     search_fields = ["name", "description", "category__name"]
 
     def get_serializer_class(self):
-        if self.action == "create":
-            return ProductCreateSerializer
         if self.action == "retrieve":
             return ProductDetailSerializer
+        if self.action == "create":
+            return ProductCreateSerializer
+        if self.action == "update" or self.action == "partial_update":
+            return ProductCreateSerializer
         return ProductListSerializer
 
     def get_permissions(self):
@@ -53,10 +55,12 @@ class ProductViewSet(viewsets.ModelViewSet):
             qs = qs.order_by("-created_at")
         return qs
 
+
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [permissions.AllowAny]
+
 
 class MyProductsView(APIView):
     permission_classes = [permissions.IsAuthenticated, IsDesigner]
@@ -76,6 +80,63 @@ class MyProductsView(APIView):
             }
             for p in products
         ])
+
+
+class DesignerListView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        designers = (
+            Product.objects.values_list("designer", flat=True).distinct()
+        )
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        # Annotate collection counts via the related products
+        users = User.objects.filter(id__in=[d for d in designers if d]).filter(is_designer=True)
+        data = []
+        for u in users:
+            products = u.products.all()
+            collection_count = products.count()
+            rated = products.exclude(rating=0)
+            avg_rating = round(sum(p.rating for p in rated) / rated.count(), 2) if rated.exists() else 0.0
+            data.append({
+                "id": u.id,
+                "username": u.username,
+                "bio": u.bio,
+                "avatar": u.avatar,
+                "is_designer": u.is_designer,
+                "collection_count": collection_count,
+                "rating": avg_rating,
+                "product_count": collection_count,
+                "specialties": [],
+            })
+        return Response(data)
+
+
+class DesignerDetailView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, id):
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        try:
+            u = User.objects.get(id=id, is_designer=True)
+        except User.DoesNotExist:
+            return Response({"detail": "Designer not found"}, status=404)
+        products = u.products.all()
+        rated = products.exclude(rating=0)
+        avg_rating = round(sum(p.rating for p in rated) / rated.count(), 2) if rated.exists() else 0.0
+        return Response({
+            "id": u.id,
+            "username": u.username,
+            "bio": u.bio,
+            "avatar": u.avatar,
+            "is_designer": u.is_designer,
+            "collection_count": products.count(),
+            "rating": avg_rating,
+            "product_count": products.count(),
+            "specialties": [],
+        })
 
 
 class OptionsView(APIView):
