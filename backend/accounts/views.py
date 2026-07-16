@@ -87,6 +87,28 @@ class UsersListView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
 
 
+@api_view(['GET', 'PATCH'])
+@permission_classes([permissions.IsAdminUser])
+def manage_user(request, user_id):
+    try:
+        user = User.objects.get(pk=user_id)
+    except User.DoesNotExist:
+        return Response({'detail': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        return Response(UserSerializer(user).data)
+
+    if request.method == 'PATCH':
+        is_designer = request.data.get('is_designer')
+        is_staff = request.data.get('is_staff')
+        if is_designer is not None:
+            user.is_designer = bool(is_designer)
+        if is_staff is not None:
+            user.is_staff = bool(is_staff)
+        user.save()
+        return Response({'detail': 'User updated.', 'is_designer': user.is_designer, 'is_staff': user.is_staff})
+
+
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def my_role(request):
