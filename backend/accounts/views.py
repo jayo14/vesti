@@ -136,7 +136,7 @@ class DesignerDashboardView(APIView):
             'products_count': products.count(),
             'orders_count': len(designer_orders),
             'available_balance': str(total_available),
-            'products': [{'id': p.id, 'name': p.name, 'price': str(p.price), 'stock': p.stock} for p in products],
+            'products': [{'id': p.id, 'name': p.name, 'price': str(p.price), 'stock': p.stock, 'image_url': p.images[0] if p.images else None, 'is_published': p.is_published} for p in products],
             'recent_orders': [
                 {'id': o.id, 'status': o.status, 'total': str(o.total)}
                 for o in designer_orders[:10]

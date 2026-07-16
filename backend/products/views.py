@@ -30,6 +30,8 @@ class ProductViewSet(viewsets.ModelViewSet):
         qs = Product.objects.all()
         if self.action in ("update", "partial_update", "destroy") and not self.request.user.is_staff:
             qs = qs.filter(designer=self.request.user)
+        if self.action == "list" and not self.request.user.is_staff:
+            qs = qs.filter(Q(is_published=True) | Q(designer=self.request.user))
         designer_id = self.request.query_params.get("designer")
         if designer_id:
             qs = qs.filter(designer_id=designer_id)
@@ -68,6 +70,8 @@ class MyProductsView(APIView):
                 'price': str(p.price),
                 'stock': p.stock,
                 'category': p.category.name if p.category else None,
+                'image_url': p.images[0] if p.images else None,
+                'is_published': p.is_published,
                 'created_at': p.created_at,
             }
             for p in products
