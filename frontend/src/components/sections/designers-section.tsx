@@ -1,16 +1,38 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { BadgeCheck, MapPin, Sparkles, ArrowRight } from "lucide-react";
+import { BadgeCheck, MapPin, Sparkles, ArrowRight, Wand2 } from "lucide-react";
 import { DESIGNERS, getGarmentsByDesigner } from "@/lib/data";
 import { useStudioStore } from "@/lib/store";
+import { useAuthStore } from "@/lib/auth-store";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 export function DesignersSection() {
-  const { setSelectedGarment, setCustomGarmentImage, setGarmentSource, setView } =
-    useStudioStore();
+  const { setSelectedGarment, setCustomGarmentImage, setGarmentSource, setView } = useStudioStore();
+  const { token, isDesigner, setUser } = useAuthStore();
+  const [becoming, setBecoming] = useState(false);
+
+  const handleBecomeDesigner = async () => {
+    if (!token) { toast.error("Sign in first"); return; }
+    setBecoming(true);
+    try {
+      const r = await fetch(`${API_BASE}/api/auth/become-designer/`, {
+        method: "POST", headers: { Authorization: `Bearer ${token}` },
+      });
+      const d = await r.json();
+      if (r.ok) {
+        toast.success("You're now a designer!");
+        setUser({ ...useAuthStore.getState().user!, is_designer: true });
+      } else { toast.error(d.detail || "Failed"); }
+    } catch { toast.error("Something went wrong"); }
+    finally { setBecoming(false); }
+  };
 
   const handleTryOnGarment = (gId: string) => {
     const g = getGarmentsByDesigner("").find((x) => x.id === gId);
@@ -48,6 +70,14 @@ export function DesignersSection() {
             Independent ateliers and houses from Paris to Tokyo. Each piece is
             hand-selected — and ready to try on with AI.
           </p>
+          {!isDesigner() && (
+            <motion.button onClick={handleBecomeDesigner} disabled={becoming}
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+              className="mt-6 px-5 py-2.5 rounded-full bg-foreground text-background text-sm font-medium hover:opacity-90 transition-opacity inline-flex items-center gap-2">
+              <Wand2 className="w-4 h-4" />
+              {becoming ? "Becoming..." : "Become a designer"}
+            </motion.button>
+          )}
         </motion.div>
 
         <div className="space-y-12">
