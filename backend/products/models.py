@@ -51,6 +51,17 @@ class Product(models.Model):
     ships_within = models.CharField(max_length=120, blank=True)
     returns = models.CharField(max_length=120, blank=True)
     is_published = models.BooleanField(default=False)
+    moderation_status = models.CharField(
+        max_length=20,
+        choices=[
+            ("draft", "Draft"),
+            ("pending_review", "Pending Review"),
+            ("published", "Published"),
+            ("rejected", "Rejected"),
+        ],
+        default="draft",
+    )
+    rejection_reason = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
