@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { User, Package, Ruler, Wallet, ArrowLeft, LogOut, Shield } from "lucide-react";
+import { User, Package, Ruler, Wallet, LogOut, Shield } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/lib/auth-store";
 
@@ -57,18 +57,32 @@ export default function AccountPage() {
           ))}
 
           {isDesigner() && (
-            <Link
-              href="/account/earnings"
-              className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-card/50 hover:bg-foreground/5 transition-colors"
-            >
-              <div className="w-10 h-10 rounded-xl bg-foreground/5 flex items-center justify-center shrink-0">
-                <Wallet className="w-5 h-5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm">Earnings</p>
-                <p className="text-xs text-muted-foreground">Sales, payouts, and revenue</p>
-              </div>
-            </Link>
+            <>
+              <Link
+                href="/account/earnings"
+                className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-card/50 hover:bg-foreground/5 transition-colors"
+              >
+                <div className="w-10 h-10 rounded-xl bg-foreground/5 flex items-center justify-center shrink-0">
+                  <Wallet className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm">Earnings</p>
+                  <p className="text-xs text-muted-foreground">Sales, payouts, and revenue</p>
+                </div>
+              </Link>
+              <Link
+                href="/account/bank-details"
+                className="flex items-center gap-4 p-4 rounded-2xl border border-border bg-card/50 hover:bg-foreground/5 transition-colors"
+              >
+                <div className="w-10 h-10 rounded-xl bg-foreground/5 flex items-center justify-center shrink-0">
+                  <Wallet className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm">Bank Details</p>
+                  <p className="text-xs text-muted-foreground">Payout account information</p>
+                </div>
+              </Link>
+            </>
           )}
 
           {isAdmin() && (

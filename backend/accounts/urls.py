@@ -4,6 +4,7 @@ from .views import (
     RegisterView, MeView, PasswordResetRequestView, PasswordResetConfirmView,
     DesignersListView, UsersListView, my_role, become_designer, DesignerDashboardView,
     manage_user, email_login, apply_designer, review_designer_application,
+    bank_details,
 )
 
 urlpatterns = [
@@ -19,6 +20,7 @@ urlpatterns = [
     path('become-designer/', become_designer, name='become-designer'),
     path('apply-designer/', apply_designer, name='apply-designer'),
     path('applications/<int:application_id>/review/', review_designer_application, name='review-application'),
+    path('bank-details/', bank_details, name='bank-details'),
     path('dashboard/', DesignerDashboardView.as_view(), name='designer-dashboard'),
     path('users/<int:user_id>/', manage_user, name='manage-user'),
 ]

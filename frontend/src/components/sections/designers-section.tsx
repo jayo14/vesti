@@ -39,25 +39,12 @@ function productToGarment(p: Product): Garment {
 export function DesignersSection() {
   const router = useRouter();
   const { setSelectedGarment, setCustomGarmentImage, setGarmentSource } = useStudioStore();
-  const { token, isDesigner, setUser } = useAuthStore();
-  const [becoming, setBecoming] = useState(false);
+  const { token, isDesigner } = useAuthStore();
   const { data: designers = [], isLoading } = useDesigners();
 
   const handleBecomeDesigner = async () => {
     if (!token) { toast.error("Sign in first"); return; }
-    setBecoming(true);
-    try {
-      const r = await fetch(`${API_BASE}/api/auth/become-designer/`, {
-        method: "POST", headers: { Authorization: `Bearer ${token}` },
-      });
-      const d = await r.json();
-      if (r.ok) {
-        toast.success("You're now a designer!");
-        const me = await fetch(`${API_BASE}/api/auth/me/`, { headers: { Authorization: `Bearer ${token}` } });
-        if (me.ok) setUser(await me.json());
-      } else { toast.error(d.detail || "Failed"); }
-    } catch { toast.error("Something went wrong"); }
-    finally { setBecoming(false); }
+    router.push("/become-designer");
   };
 
   const handleTryOnProduct = (p: Product) => {
@@ -92,11 +79,11 @@ export function DesignersSection() {
             hand-selected — and ready to try on with AI.
           </p>
           {!isDesigner() && (
-            <motion.button onClick={handleBecomeDesigner} disabled={becoming}
+            <motion.button onClick={handleBecomeDesigner}
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
               className="mt-6 px-5 py-2.5 rounded-full bg-foreground text-background text-sm font-medium hover:opacity-90 transition-opacity inline-flex items-center gap-2">
               <Wand2 className="w-4 h-4" />
-              {becoming ? "Becoming..." : "Become a designer"}
+              Become a designer
             </motion.button>
           )}
         </motion.div>

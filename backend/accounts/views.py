@@ -125,6 +125,23 @@ def manage_user(request, user_id):
         return Response({'detail': 'User updated.', 'is_designer': user.is_designer, 'is_staff': user.is_staff})
 
 
+@api_view(['GET', 'POST'])
+@permission_classes([permissions.IsAuthenticated])
+def bank_details(request):
+    user = request.user
+    if request.method == 'GET':
+        return Response({
+            'bank_name': user.bank_name,
+            'account_number': user.bank_account_number,
+            'account_name': user.bank_account_name,
+        })
+    user.bank_name = request.data.get('bank_name', user.bank_name)
+    user.bank_account_number = request.data.get('account_number', user.bank_account_number)
+    user.bank_account_name = request.data.get('account_name', user.bank_account_name)
+    user.save(update_fields=['bank_name', 'bank_account_number', 'bank_account_name'])
+    return Response({'detail': 'Bank details updated.'})
+
+
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def my_role(request):
