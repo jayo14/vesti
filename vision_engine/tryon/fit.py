@@ -35,28 +35,30 @@ def analyze_fit(
             style_match_pct=70.0,
         )
 
-    best_label, best_delta, best_pct = None, None, 0.0
+    best_label, best_signed, best_pct = None, None, 0.0
     for label, spec in chart.items():
-        delta = 0.0
+        signed = 0.0
         n = 0
         for key in _BODY_KEYS:
             body_val = getattr(measurements, key, None)
             chart_val = spec.get(key)
             if body_val is None or chart_val is None:
                 continue
-            delta += abs(body_val - chart_val)
+            # Positive => body larger than chart (garment will fit tight).
+            signed += body_val - chart_val
             n += 1
         if n == 0:
             continue
-        avg_delta = delta / n
+        avg_signed = signed / n
+        avg_abs = abs(avg_signed)
         # 100% match at 0cm diff, ~0% at 12cm+ avg diff.
-        pct = max(0.0, 100.0 - (avg_delta / 12.0) * 100.0)
-        if best_delta is None or avg_delta < best_delta:
-            best_delta = avg_delta
+        pct = max(0.0, 100.0 - (avg_abs / 12.0) * 100.0)
+        if best_signed is None or avg_abs < abs(best_signed):
+            best_signed = avg_signed
             best_label = label
             best_pct = pct
 
-    estimated_fit = _classify(best_delta)
+    estimated_fit = _classify(best_signed)
     sleeve_note, waist_note = _notes(measurements, chart.get(best_label, {}), metadata.fit_type)
 
     return s.FitAnalysis(
@@ -68,14 +70,14 @@ def analyze_fit(
     )
 
 
-def _classify(avg_delta: float | None) -> str:
-    if avg_delta is None:
+def _classify(avg_signed: float | None) -> str:
+    if avg_signed is None:
         return "true_to_size"
-    if avg_delta <= 3.0:
+    if abs(avg_signed) <= 3.0:
         return "true_to_size"
-    if avg_delta <= 7.0:
-        return "runs_small"  # body is larger than the closest size -> garment fits tight
-    return "runs_large"
+    # Positive avg_signed => body is larger than the closest size => the
+    # garment runs small (fits tight) for this body. Negative => runs large.
+    return "runs_small" if avg_signed > 0 else "runs_large"
 
 
 def _from_fit_type(fit: s.FitType) -> str:

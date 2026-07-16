@@ -27,13 +27,9 @@ _NOSE, _L_SHOULDER, _R_SHOULDER = 0, 11, 12
 _L_ELBOW, _L_WRIST = 13, 15
 _R_ELBOW, _R_WRIST = 14, 16
 _L_HIP, _R_HIP = 23, 24
-_L_KNEE, _L_ANKLE = 25, 27
-_R_KNEE, _R_ANKLE = 26, 28
+_L_KNEE, _R_KNEE = 25, 26
+_L_ANKLE, _R_ANKLE = 27, 28
 _L_HEEL, _R_HEEL = 29, 31
-
-
-def _px(lm: s.Landmark) -> tuple[float, float]:
-    return lm.x, lm.y
 
 
 def _dist(a: s.Landmark, b: s.Landmark) -> float:
@@ -90,12 +86,12 @@ def estimate(
         waist_cm = (mask_regions.torso_width_px * 0.82) * m_scale * 3.14159 * BODY_RATIO
         hip_cm = mask_regions.hip_width_px * m_scale * 3.14159 * BODY_RATIO
     else:
-        # Fallback: derive from shoulder/hip landmark spread with a typical
-        # aspect ratio. Marked lower confidence.
+        # Fallback: derive from shoulder/hip landmark spread with typical
+        # body-proportion ratios. Marked lower confidence.
         hip_width = _dist(landmarks[_L_HIP], landmarks[_R_HIP]) * scale
-        chest_cm = shoulder_width * 2.4
-        waist_cm = shoulder_width * 2.0
-        hip_cm = max(hip_width * 2.0, shoulder_width * 2.55)
+        chest_cm = shoulder_width * 2.15
+        waist_cm = shoulder_width * 1.75
+        hip_cm = hip_width * 2.0
 
     # --- Confidence -------------------------------------------------------
     vis = [landmarks[i].visibility for i in (_L_SHOULDER, _R_SHOULDER, _L_HIP, _R_HIP, _L_KNEE, _R_KNEE)]
