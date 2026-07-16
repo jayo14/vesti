@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Sparkles,
   Wand2,
@@ -11,18 +11,23 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useStudioStore } from "@/lib/store";
+import { useAuthStore } from "@/lib/auth-store";
 import type { TryOnRequest, TryOnResponse } from "@/lib/types";
 import { getMaterial } from "@/lib/materials";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
-const STAGES = [
-  { at: 0, label: "Analyzing your photo…" },
-  { at: 15, label: "Identifying garment & fabric…" },
-  { at: 30, label: "Mapping garment to your pose…" },
-  { at: 50, label: "Rendering material-aware draping…" },
-  { at: 70, label: "Matching lighting & shadows…" },
-  { at: 88, label: "Finalizing your look…" },
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+
+const PIPELINE_STAGES = [
+  { at: 0, label: "Reading your photo…" },
+  { at: 10, label: "Detecting body landmarks…" },
+  { at: 22, label: "Analyzing body shape…" },
+  { at: 35, label: "Taking body measurements…" },
+  { at: 50, label: "Analyzing the garment…" },
+  { at: 65, label: "Fitting garment to your body…" },
+  { at: 78, label: "Rendering the try-on…" },
+  { at: 90, label: "Enhancing the result…" },
 ];
 
 interface GenerationPanelProps {
@@ -34,7 +39,6 @@ export function GenerationPanel({ onGenerated }: GenerationPanelProps) {
     personImage,
     selectedGarment,
     customGarmentImage,
-    garmentSource,
     selectedMaterial,
     isGenerating,
     generationProgress,
@@ -44,22 +48,22 @@ export function GenerationPanel({ onGenerated }: GenerationPanelProps) {
     setGenerationProgress,
     setGenerationStage,
     setResultImage,
+    setFitAnalysis,
     resetGeneration,
   } = useStudioStore();
+  const token = useAuthStore((s) => s.token);
 
   const [error, setError] = useState<string | null>(null);
   const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Run a fake-progress ticker while we wait for the API so the user sees motion.
   const startProgressTicker = useCallback(() => {
     let p = 0;
     if (progressTimerRef.current) clearInterval(progressTimerRef.current);
     progressTimerRef.current = setInterval(() => {
-      // Ease towards 90% while waiting — never reaches 100 until the API returns.
       p += (90 - p) * 0.04 + 0.5;
       if (p >= 90) p = 90;
       setGenerationProgress(Math.min(90, p));
-      const stage = [...STAGES].reverse().find((s) => p >= s.at);
+      const stage = [...PIPELINE_STAGES].reverse().find((s) => p >= s.at);
       if (stage) setGenerationStage(stage.label);
     }, 250);
   }, [setGenerationProgress, setGenerationStage]);
@@ -87,42 +91,46 @@ export function GenerationPanel({ onGenerated }: GenerationPanelProps) {
     }
 
     setError(null);
+    setFitAnalysis(null);
     setIsGenerating(true);
     setResultImage(null);
     setGenerationProgress(0);
-    setGenerationStage(STAGES[0].label);
+    setGenerationStage(PIPELINE_STAGES[0].label);
     startProgressTicker();
 
     try {
       const body: TryOnRequest = {
-        personImage,
-        garmentImage,
-        garmentDescription: selectedGarment
-          ? `${selectedGarment.name} — ${selectedGarment.description}`
-          : undefined,
-        preservePose: true,
-        preserveLighting: true,
+        person_image: personImage,
         material: selectedMaterial || undefined,
       };
 
-      const res = await fetch("/api/try-on", {
+      if (selectedGarment) {
+        body.product_id = parseInt(selectedGarment.id, 10) || selectedGarment.id;
+      } else {
+        body.garment_image = garmentImage;
+      }
+
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const res = await fetch(`${API_BASE}/api/ai/try-on/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(body),
       });
 
       const data: TryOnResponse = await res.json();
 
-      if (!data.success || !data.resultImage) {
+      if (!data.success || !data.result_image) {
         throw new Error(data.error || "Generation failed. Please try again.");
       }
 
       stopProgressTicker();
       setGenerationProgress(100);
       setGenerationStage("Done");
-      // Small delay so the bar visibly hits 100 before showing the result.
       await new Promise((r) => setTimeout(r, 350));
-      setResultImage(data.resultImage);
+      setResultImage(data.result_image);
+      if (data.fit_analysis) setFitAnalysis(data.fit_analysis);
       setIsGenerating(false);
       onGenerated?.();
       toast.success("Your look is ready.");
@@ -138,14 +146,21 @@ export function GenerationPanel({ onGenerated }: GenerationPanelProps) {
     customGarmentImage,
     selectedGarment,
     selectedMaterial,
+    token,
     setIsGenerating,
     setResultImage,
+    setFitAnalysis,
     setGenerationProgress,
     setGenerationStage,
     startProgressTicker,
     stopProgressTicker,
     onGenerated,
   ]);
+
+  const handleRetry = () => {
+    setError(null);
+    generate();
+  };
 
   // Loading state
   if (isGenerating) {
@@ -196,8 +211,8 @@ export function GenerationPanel({ onGenerated }: GenerationPanelProps) {
         <p className="text-sm text-muted-foreground mb-3 max-w-xs">
           {materialSpec
             ? `Dressing you in ${materialSpec.name.toLowerCase()} — respecting its ${materialSpec.drape} drape and ${materialSpec.sheen} sheen.`
-            : "Our AI is dressing you in the selected garment."}{" "}
-          This usually takes 8–15 seconds.
+            : "Running the vision pipeline on your photo."}{" "}
+          This usually takes 10–30 seconds.
         </p>
         {materialSpec && (
           <div className="mb-6 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/60">
@@ -270,10 +285,8 @@ export function GenerationPanel({ onGenerated }: GenerationPanelProps) {
         {resultImage
           ? "View your result, compare with the original, and save or share your new look."
           : selectedMaterial
-          ? `We'll preserve your face, pose, and lighting while dressing you in ${
-              getMaterial(selectedMaterial)?.name.toLowerCase() || "the selected fabric"
-            } — respecting its ${getMaterial(selectedMaterial)?.drape} drape and avoiding constructions it can't support.`
-          : "We'll preserve your face, pose, and lighting while dressing you in the selected garment."}
+          ? `Your real photo will be used with ${getMaterial(selectedMaterial)?.name.toLowerCase()} material awareness.`
+          : "Your real photo will be used with full body and face preservation."}
       </p>
 
       {selectedMaterial && (
