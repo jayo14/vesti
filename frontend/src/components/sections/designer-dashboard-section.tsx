@@ -18,7 +18,9 @@ export function DesignerDashboardSection() {
   const [dash, setDash] = useState<any>(null);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [newProduct, setNewProduct] = useState({ name: "", description: "", price: "", stock: "1" });
+  const [deleting, setDeleting] = useState<number | null>(null);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [newProduct, setNewProduct] = useState({ name: "", description: "", price: "", stock: "1", category: "" });
 
   const fetchDash = async () => {
     if (!token) return;
@@ -32,6 +34,25 @@ export function DesignerDashboardSection() {
 
   useEffect(() => { fetchDash(); }, [token]);
 
+  useEffect(() => {
+    fetch(`${API_BASE}/api/categories/`).then(r => r.ok && r.json()).then(d => setCategories(d.results || d || [])).catch(() => {});
+  }, []);
+
+  const deleteProduct = async (id: number) => {
+    if (!token) return;
+    setDeleting(id);
+    try {
+      const r = await fetch(`${API_BASE}/api/products/${id}/`, {
+        method: "DELETE", headers: { Authorization: `Bearer ${token}` },
+      });
+      if (r.ok || r.status === 204) {
+        toast.success("Deleted");
+        fetchDash();
+      } else toast.error("Failed to delete");
+    } catch { toast.error("Failed"); }
+    finally { setDeleting(null); }
+  };
+
   const addProduct = async () => {
     if (!token || !newProduct.name || !newProduct.price) return;
     setSaving(true);
@@ -39,7 +60,7 @@ export function DesignerDashboardSection() {
       const r = await fetch(`${API_BASE}/api/products/`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ ...newProduct, price: parseFloat(newProduct.price), stock: parseInt(newProduct.stock) }),
+        body: JSON.stringify({ ...newProduct, price: parseFloat(newProduct.price), stock: parseInt(newProduct.stock), category: parseInt(newProduct.category) || undefined }),
       });
       if (r.ok) {
         toast.success("Product added");
@@ -100,6 +121,11 @@ export function DesignerDashboardSection() {
                   placeholder="Product name" className="w-full px-3 py-2 text-sm rounded-xl border bg-background" />
                 <input value={newProduct.description} onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
                   placeholder="Description" className="w-full px-3 py-2 text-sm rounded-xl border bg-background" />
+                <select value={newProduct.category} onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
+                  className="w-full px-3 py-2 text-sm rounded-xl border bg-background">
+                  <option value="">Select category</option>
+                  {categories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
                 <div className="flex gap-2">
                   <input type="number" value={newProduct.price} onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
                     placeholder="Price (USD)" className="flex-1 px-3 py-2 text-sm rounded-xl border bg-background" />
@@ -125,7 +151,10 @@ export function DesignerDashboardSection() {
                     </div>
                     <div className="flex items-center gap-1">
                       <button className="p-2 rounded-full hover:bg-foreground/5"><Edit3 className="w-3.5 h-3.5" /></button>
-                      <button className="p-2 rounded-full hover:bg-foreground/5"><Trash2 className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => deleteProduct(p.id)} disabled={deleting === p.id}
+                        className="p-2 rounded-full hover:bg-red-500/10 transition-colors">
+                        {deleting === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                      </button>
                     </div>
                   </div>
                 ))}
