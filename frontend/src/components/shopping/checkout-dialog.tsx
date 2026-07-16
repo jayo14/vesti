@@ -168,6 +168,21 @@ export function CheckoutDialog({
     }
   }, [order, onSuccess, setPaymentStatus]);
 
+  const [timeLeft, setTimeLeft] = useState("");
+  useEffect(() => {
+    if (!virtualAccount?.expires_at) return;
+    const update = () => {
+      const diff = new Date(virtualAccount.expires_at).getTime() - Date.now();
+      if (diff <= 0) { setTimeLeft("Expired"); return; }
+      const m = Math.floor(diff / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setTimeLeft(`${m}m ${s}s`);
+    };
+    update();
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
+  }, [virtualAccount?.expires_at]);
+
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
@@ -291,7 +306,7 @@ export function CheckoutDialog({
                   </div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center">
                     <Clock className="w-3.5 h-3.5" />
-                    <span>Expires {new Date(virtualAccount.expires_at).toLocaleString()}</span>
+                    <span>{timeLeft ? `Expires in ${timeLeft}` : `Expires ${new Date(virtualAccount.expires_at).toLocaleString()}`}</span>
                   </div>
                 </div>
 
