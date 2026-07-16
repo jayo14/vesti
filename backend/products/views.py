@@ -3,21 +3,34 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.db.models import Q
 from .models import Product, Category
-from .serializers import ProductListSerializer, ProductDetailSerializer, CategorySerializer
+from .serializers import ProductListSerializer, ProductDetailSerializer, ProductCreateSerializer, CategorySerializer
+from accounts.permissions import IsDesigner
 
-class ProductViewSet(viewsets.ReadOnlyModelViewSet):
+class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
-    permission_classes = [permissions.AllowAny]
     filter_backends = [filters.SearchFilter]
     search_fields = ["name", "description", "category__name"]
 
     def get_serializer_class(self):
+        if self.action == "create":
+            return ProductCreateSerializer
         if self.action == "retrieve":
             return ProductDetailSerializer
         return ProductListSerializer
 
+    def get_permissions(self):
+        if self.action in ("create", "update", "partial_update", "destroy"):
+            return [permissions.IsAuthenticated(), IsDesigner()]
+        return [permissions.AllowAny()]
+
+    def perform_create(self, serializer):
+        serializer.save(designer=self.request.user)
+
     def get_queryset(self):
         qs = Product.objects.all()
+        designer_id = self.request.query_params.get("designer")
+        if designer_id:
+            qs = qs.filter(designer_id=designer_id)
         category = self.request.query_params.get("category")
         if category:
             qs = qs.filter(category__slug=category)

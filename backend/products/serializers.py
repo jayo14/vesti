@@ -9,15 +9,22 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class ProductListSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
+    designer_name = serializers.CharField(source='designer.username', read_only=True, default='')
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'price', 'category', 'images', 'colors', 'stock', 'created_at']
+        fields = ['id', 'name', 'price', 'category', 'designer', 'designer_name', 'images', 'colors', 'stock', 'created_at']
 
 class ProductDetailSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     reviews = ReviewSerializer(many=True, read_only=True)
+    designer_name = serializers.CharField(source='designer.username', read_only=True, default='')
 
     class Meta:
         model = Product
         fields = '__all__'
+
+class ProductCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ['name', 'description', 'price', 'category', 'images', 'sizes', 'colors', 'stock']
