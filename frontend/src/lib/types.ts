@@ -394,6 +394,128 @@ export interface AdminDashboardSummary {
   paid_transactions: number;
   total_designers: number;
   pending_payout_count: number;
+  queues?: {
+    pending_designer_applications: number;
+    pending_product_reviews: number;
+    open_disputes: number;
+    pending_payouts: number;
+  };
+  ai_health_7d?: {
+    generations: number;
+    completed: number;
+    failed: number;
+    success_rate: number;
+    avg_latency_ms: number;
+  };
+  growth?: {
+    new_users_7d: number;
+    new_users_30d: number;
+    new_designers_30d: number;
+    new_products_30d: number;
+    paid_transactions_30d: number;
+  };
+}
+
+export interface AdminDesignerApplication {
+  id: number;
+  brand_name: string;
+  bio: string;
+  portfolio_links: string[];
+  status: "pending" | "approved" | "rejected";
+  rejection_reason: string;
+  created_at: string;
+  updated_at: string;
+  user: {
+    id: number;
+    username: string;
+    email: string;
+    avatar: string;
+    is_designer: boolean;
+  };
+  reviewed_by: string | null;
+}
+
+export interface AdminPendingProduct {
+  id: number;
+  name: string;
+  description: string;
+  price: string;
+  currency: string;
+  images: unknown[];
+  image_url: string | null;
+  designer_id: number | null;
+  designer_name: string | null;
+  category: string | null;
+  material: string;
+  fit_type: string;
+  sizes: string[];
+  colors: string[];
+  moderation_status: "draft" | "pending_review" | "published" | "rejected";
+  rejection_reason: string;
+  is_published: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AdminAIHealth {
+  window_days: number;
+  totals: {
+    generations: number;
+    completed: number;
+    failed: number;
+    processing: number;
+    success_rate: number;
+  };
+  failures_by_reason: { reason: string; count: number }[];
+  latency_ms: { avg: number; fastest: number; slowest: number };
+  recent_failures: {
+    id: number;
+    created_at: string;
+    failure_reason: string;
+    error: string;
+    latency_ms: number;
+    user_username: string;
+    product_name: string | null;
+    model: string;
+  }[];
+}
+
+export interface AdminGeneration {
+  id: number;
+  user: number;
+  user_username: string;
+  product: number | null;
+  product_name: string | null;
+  person_image: string;
+  garment_image: string;
+  result_image: string;
+  fit_analysis: Record<string, unknown>;
+  fit_confidence: number;
+  status: "pending" | "processing" | "completed" | "failed";
+  error: string;
+  failure_reason: string;
+  latency_ms: number;
+  model: string;
+  flagged: boolean;
+  created_at: string;
+}
+
+export interface AdminDispute {
+  id: number;
+  order: number;
+  order_status: string;
+  order_total: string;
+  user: number;
+  user_username: string;
+  reason: string;
+  description: string;
+  status: "open" | "in_review" | "resolved" | "rejected";
+  resolution_notes: string;
+  resolved_by: number | null;
+  resolved_by_username: string | null;
+  resolved_at: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface InitiatePaymentRequest {
