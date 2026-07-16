@@ -20,6 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useRouter } from "next/navigation";
 import { useStudioStore } from "@/lib/store";
 import type { SavedLook } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -30,6 +31,7 @@ interface ActionBarProps {
 }
 
 export function ActionBar({ visible }: ActionBarProps) {
+  const router = useRouter();
   const {
     personImage,
     selectedGarment,
@@ -40,7 +42,6 @@ export function ActionBar({ visible }: ActionBarProps) {
     savedLooks,
     saveLook,
     startPlayground,
-    setView,
   } = useStudioStore();
 
   const [purchaseOpen, setPurchaseOpen] = useState(false);
@@ -85,7 +86,7 @@ export function ActionBar({ visible }: ActionBarProps) {
   const handleSendToPlayground = () => {
     if (!resultImage) return;
     startPlayground(resultImage);
-    setView("playground");
+    router.push("/playground");
     toast.success("Sent to the Playground — start editing!");
   };
 

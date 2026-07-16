@@ -3,26 +3,36 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Menu, X, ShoppingBag, Wallet, Shield, LogIn, User } from "lucide-react";
 import { useState, useEffect } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { useStudioStore } from "@/lib/store";
 import { useAuthStore } from "@/lib/auth-store";
-import type { ViewMode } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { AuthModal } from "@/components/auth/auth-modal";
 
-const NAV_ITEMS: { id: ViewMode; label: string; icon?: typeof Sparkles; role?: "designer" | "admin" | "any" }[] = [
-  { id: "hero", label: "Home" },
-  { id: "studio", label: "Studio" },
-  { id: "playground", label: "Playground" },
-  { id: "marketplace", label: "Marketplace" },
-  { id: "designers", label: "Designers" },
-  { id: "wardrobe", label: "Wardrobe" },
-  { id: "designer-dashboard", label: "Dashboard", icon: User, role: "designer" },
-  { id: "earnings", label: "Earnings", icon: Wallet, role: "designer" },
-  { id: "admin", label: "Admin", icon: Shield, role: "admin" },
+type NavItem = {
+  path: string;
+  label: string;
+  icon?: typeof Sparkles;
+  role?: "designer" | "admin" | "any";
+};
+
+const NAV_ITEMS: NavItem[] = [
+  { path: "/", label: "Home" },
+  { path: "/try-on", label: "Try On" },
+  { path: "/marketplace", label: "Marketplace" },
+  { path: "/designers", label: "Designers" },
+  { path: "/wardrobe", label: "Wardrobe" },
+  { path: "/playground", label: "Playground" },
+  { path: "/dashboard", label: "Dashboard", icon: User, role: "designer" },
+  { path: "/account/earnings", label: "Earnings", icon: Wallet, role: "designer" },
+  { path: "/admin", label: "Admin", icon: Shield, role: "admin" },
 ];
 
 export function SiteHeader() {
-  const { view, setView, savedLooks } = useStudioStore();
+  const pathname = usePathname();
+  const router = useRouter();
+  const savedLooks = useStudioStore((s) => s.savedLooks);
   const { token, user, isDesigner, isAdmin, logout } = useAuthStore();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -35,10 +45,15 @@ export function SiteHeader() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const handleNav = (v: ViewMode) => {
-    setView(v);
+  const handleNav = (path: string) => {
+    router.push(path);
     setMobileOpen(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const isActive = (path: string) => {
+    if (path === "/") return pathname === "/";
+    return pathname.startsWith(path);
   };
 
   const visibleItems = NAV_ITEMS.filter((item) => {
@@ -61,7 +76,7 @@ export function SiteHeader() {
             "flex items-center justify-between rounded-2xl px-4 sm:px-6 h-14 transition-all duration-300",
             scrolled ? "glass-strong shadow-premium" : "bg-transparent border border-transparent"
           )}>
-            <button onClick={() => handleNav("hero")} className="flex items-center gap-2 group" aria-label="Home">
+            <Link href="/" className="flex items-center gap-2 group" aria-label="Home">
               <div className="relative w-8 h-8 rounded-lg bg-foreground flex items-center justify-center overflow-hidden">
                 <Sparkles className="w-4 h-4 text-background" strokeWidth={2.5} />
               </div>
@@ -69,13 +84,13 @@ export function SiteHeader() {
                 <span className="font-serif text-base font-medium tracking-tight">AI Fashion</span>
                 <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Studio</span>
               </div>
-            </button>
+            </Link>
 
             <nav className="hidden md:flex items-center gap-1">
               {visibleItems.map((item) => {
-                const active = view === item.id;
+                const active = isActive(item.path);
                 return (
-                  <button key={item.id} onClick={() => handleNav(item.id)}
+                  <button key={item.path} onClick={() => handleNav(item.path)}
                     className={cn(
                       "relative px-4 py-2 text-sm font-medium rounded-full transition-colors",
                       active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
@@ -96,14 +111,14 @@ export function SiteHeader() {
             </nav>
 
             <div className="flex items-center gap-2">
-              <button onClick={() => handleNav("wardrobe")}
+              <Link href="/looks"
                 className="relative hidden sm:flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-full text-muted-foreground hover:text-foreground transition-colors">
                 <ShoppingBag className="w-4 h-4" />
                 <span>{savedLooks.length}</span>
-              </button>
+              </Link>
               {token ? (
                 <div className="flex items-center gap-1">
-                  <span className="hidden sm:block text-xs text-muted-foreground">{user?.username}</span>
+                  <Link href="/account" className="hidden sm:block text-xs text-muted-foreground hover:underline">{user?.username}</Link>
                   {isDesigner() && <span className="hidden sm:inline text-[10px] px-1.5 py-0.5 rounded-full bg-champagne/20 text-champagne font-medium">D</span>}
                   {isAdmin() && <span className="hidden sm:inline text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-500 font-medium">A</span>}
                   <button onClick={logout}
@@ -134,14 +149,17 @@ export function SiteHeader() {
             <motion.nav initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -20, opacity: 0 }}
               transition={{ delay: 0.05 }} className="pt-24 px-6 flex flex-col gap-2"
               onClick={(e) => e.stopPropagation()}>
-              {visibleItems.map((item, i) => (
-                <motion.button key={item.id} initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.1 + i * 0.05 }} onClick={() => handleNav(item.id)}
-                  className={cn("text-left py-4 text-2xl font-serif border-b border-border",
-                    view === item.id ? "text-foreground" : "text-muted-foreground")}>
-                  {item.label}
-                </motion.button>
-              ))}
+              {visibleItems.map((item, i) => {
+                const active = isActive(item.path);
+                return (
+                  <motion.button key={item.path} initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 0.1 + i * 0.05 }} onClick={() => handleNav(item.path)}
+                    className={cn("text-left py-4 text-2xl font-serif border-b border-border",
+                      active ? "text-foreground" : "text-muted-foreground")}>
+                    {item.label}
+                  </motion.button>
+                );
+              })}
               {!token && (
                 <button onClick={() => { setAuthOpen(true); setMobileOpen(false); }}
                   className="mt-6 w-full py-3 text-sm font-medium rounded-full bg-foreground text-background">

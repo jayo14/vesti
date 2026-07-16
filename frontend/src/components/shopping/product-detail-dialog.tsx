@@ -22,8 +22,8 @@ import {
   Minus,
   Share2,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import type { Product } from "@/lib/types";
-import { useStudioStore } from "@/lib/store";
 import { useProductActions } from "@/lib/use-product-actions";
 import { getMaterial } from "@/lib/materials";
 import { useProducts } from "@/lib/api/products";
@@ -76,7 +76,7 @@ function ProductDetailContent({
   onOpenChange: (o: boolean) => void;
   onOpenProduct: (p: Product) => void;
 }) {
-  const { setView } = useStudioStore();
+  const router = useRouter();
   const { checkoutItem, addToCartItem, buyNow, tryOn } = useProductActions();
   const { data: allProducts = [] } = useProducts();
 

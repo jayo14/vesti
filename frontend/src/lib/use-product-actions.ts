@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import type { Product, CheckoutItem } from "@/lib/types";
 import { useStudioStore } from "@/lib/store";
 import { useShoppingStore } from "@/lib/shopping-store";
@@ -17,7 +18,8 @@ interface Options {
  * detail dialog and the dedicated product page.
  */
 export function useProductActions() {
-  const { setView, setSelectedGarment, setCustomGarmentImage, setGarmentSource, setSelectedMaterial } =
+  const router = useRouter();
+  const { setSelectedGarment, setCustomGarmentImage, setGarmentSource, setSelectedMaterial } =
     useStudioStore();
   const { addToCart } = useShoppingStore();
   const [checkoutItem, setCheckoutItem] = useState<CheckoutItem | null>(null);
@@ -81,8 +83,8 @@ export function useProductActions() {
     });
     setCustomGarmentImage(null);
     setGarmentSource("marketplace");
-    if (product.material) setSelectedMaterial(product.material);
-    setView("studio");
+    if (product.material)     setSelectedMaterial(product.material);
+    router.push("/try-on");
     toast.success(`${product.name} loaded into the Studio.`);
   };
 

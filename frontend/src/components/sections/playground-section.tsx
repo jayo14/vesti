@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Wand2, Sparkles, Layers } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useStudioStore } from "@/lib/store";
 import { toast } from "sonner";
 import { PreviewCanvas } from "@/components/playground/preview-canvas";
@@ -14,11 +15,11 @@ import { ImageSourcePicker } from "@/components/playground/image-source-picker";
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 export function PlaygroundSection() {
+  const router = useRouter();
   const {
     startPlayground,
     playgroundImage,
     playgroundHistory,
-    setView,
     resultImage,
   } = useStudioStore();
   const [sourcePickerOpen, setSourcePickerOpen] = useState(false);
@@ -123,7 +124,7 @@ export function PlaygroundSection() {
             className="mt-6 text-center"
           >
             <button
-              onClick={() => setView("studio")}
+              onClick={() => router.push("/try-on")}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               ← Generate a try-on in the Studio first, or load any image above

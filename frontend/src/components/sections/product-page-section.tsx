@@ -18,8 +18,8 @@ import {
   Share2,
   ArrowLeft,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import type { Product } from "@/lib/types";
-import { useStudioStore } from "@/lib/store";
 import { useProductActions } from "@/lib/use-product-actions";
 import { getMaterial } from "@/lib/materials";
 import { useProduct, useProducts } from "@/lib/api/products";
@@ -37,7 +37,7 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 type Tab = "description" | "styling" | "reviews" | "shipping";
 
 export function ProductPageSection({ productId }: { productId: string }) {
-  const { setView } = useStudioStore();
+  const router = useRouter();
   const { checkoutItem, addToCartItem, buyNow, tryOn } = useProductActions();
   const { data: product, isLoading } = useProduct(productId);
   const { data: allProducts = [] } = useProducts();
@@ -98,7 +98,7 @@ export function ProductPageSection({ productId }: { productId: string }) {
     <section className="relative min-h-screen pt-24 pb-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <button
-          onClick={() => setView("marketplace")}
+          onClick={() => router.push("/marketplace")}
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> Back to marketplace
@@ -180,7 +180,7 @@ export function ProductPageSection({ productId }: { productId: string }) {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE }} className="space-y-5">
             <div>
               <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
-                <button onClick={() => setView("marketplace")} className="hover:text-foreground">{product.sellerName}</button>
+                <button onClick={() => router.push("/marketplace")} className="hover:text-foreground">{product.sellerName}</button>
                 <span className="text-champagne">✓ Verified Seller</span>
               </div>
               <h1 className="font-serif text-4xl lg:text-5xl font-medium tracking-[-0.02em] leading-tight">{product.name}</h1>
@@ -371,7 +371,21 @@ export function ProductPageSection({ productId }: { productId: string }) {
             <h3 className="font-serif text-2xl mb-5">You might also like</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
               {relatedProducts.map((p, i) => (
-                <ProductCard key={p.id} product={p} index={i} onOpen={(prod) => useStudioStore.getState().openProductPage(prod.id)} onTryOn={(prod) => useStudioStore.getState().openProductPage(prod.id)} />
+                <ProductCard key={p.id} product={p} index={i} onOpen={(prod) => router.push(`/marketplace/${prod.id}`)} onTryOn={(prod) => {
+                  const store = useStudioStore.getState();
+                  store.setSelectedGarment({
+                    id: prod.id, name: prod.name, designer: prod.sellerName, designerId: prod.sellerId,
+                    category: prod.category, price: prod.price, currency: prod.currency,
+                    image: prod.images?.[0]?.url || prod.image, description: prod.description,
+                    colors: prod.colors.map((c) => c.name), sizes: prod.sizes.map((s) => s.label),
+                    tags: prod.tags, featured: prod.featured, inStock: prod.availability !== "sold-out",
+                    material: prod.material,
+                  });
+                  store.setCustomGarmentImage(null);
+                  store.setGarmentSource("marketplace");
+                  if (prod.material) store.setSelectedMaterial(prod.material);
+                  router.push("/try-on");
+                }} />
               ))}
             </div>
           </div>

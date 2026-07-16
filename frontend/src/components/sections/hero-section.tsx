@@ -2,13 +2,12 @@
 
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles, Camera, Shirt, Wand2 } from "lucide-react";
-import { useStudioStore } from "@/lib/store";
+import Link from "next/link";
 import { useProducts } from "@/lib/api/products";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 export function HeroSection() {
-  const setView = useStudioStore((s) => s.setView);
   const { data: products = [] } = useProducts();
   const featuredPieces = products.filter((p) => p.featured).slice(0, 3);
 
@@ -67,19 +66,19 @@ export function HeroSection() {
               transition={{ duration: 0.7, ease: EASE, delay: 0.4 }}
               className="mt-10 flex flex-wrap items-center gap-3"
             >
-              <button
-                onClick={() => setView("studio")}
+              <Link
+                href="/try-on"
                 className="group inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-foreground text-background text-sm font-medium hover:opacity-90 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-premium"
               >
                 Start Try-On
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-              </button>
-              <button
-                onClick={() => setView("marketplace")}
+              </Link>
+              <Link
+                href="/marketplace"
                 className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full border border-border bg-background/50 backdrop-blur text-sm font-medium hover:bg-foreground/5 transition-colors"
               >
                 Browse Marketplace
-              </button>
+              </Link>
             </motion.div>
 
             {/* Trust stats */}

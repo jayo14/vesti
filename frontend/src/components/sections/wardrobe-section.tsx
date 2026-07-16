@@ -13,6 +13,7 @@ import {
   Wand2,
   Shirt,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useStudioStore } from "@/lib/store";
 import { useWardrobeStore } from "@/lib/wardrobe-store";
 import { getMaterial } from "@/lib/materials";
@@ -47,7 +48,8 @@ function timeAgo(ts: number): string {
 }
 
 export function WardrobeSection() {
-  const { savedLooks, deleteLook, setView, startPlayground } = useStudioStore();
+  const router = useRouter();
+  const { savedLooks, deleteLook, startPlayground } = useStudioStore();
   const { items } = useWardrobeStore();
   const [tab, setTab] = useState<Tab>("looks");
   const [viewing, setViewing] = useState<SavedLook | null>(null);
@@ -178,7 +180,7 @@ export function WardrobeSection() {
                       to see it here.
                     </p>
                     <button
-                      onClick={() => setView("studio")}
+                      onClick={() => router.push("/try-on")}
                       className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-foreground text-background text-sm font-medium hover:opacity-90 transition-opacity"
                     >
                       Open Studio <ArrowRight className="w-4 h-4" />
@@ -378,7 +380,7 @@ export function WardrobeSection() {
                 if (!viewing) return;
                 startPlayground(viewing.resultImage);
                 setViewing(null);
-                setView("playground");
+                router.push("/playground");
                 toast.success("Loaded into the Playground.");
               }}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border text-sm font-medium hover:bg-foreground/5 transition-colors"
@@ -388,7 +390,7 @@ export function WardrobeSection() {
             <button
               onClick={() => {
                 setViewing(null);
-                setView("marketplace");
+                router.push("/marketplace");
               }}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-foreground text-background text-sm font-medium hover:opacity-90 transition-opacity"
             >

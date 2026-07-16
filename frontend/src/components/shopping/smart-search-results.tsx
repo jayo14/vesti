@@ -15,6 +15,7 @@ import {
   ArrowRight,
   Shirt,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useShoppingStore } from "@/lib/shopping-store";
 import { useStudioStore } from "@/lib/store";
 import { useProducts } from "@/lib/api/products";
@@ -40,7 +41,8 @@ export function SmartSearchResults({
     setSmartSearchResult,
     setSmartSearchActive,
   } = useShoppingStore();
-  const { setSelectedGarment, setCustomGarmentImage, setGarmentSource, setSelectedMaterial, setView } = useStudioStore();
+  const router = useRouter();
+  const { setSelectedGarment, setCustomGarmentImage, setGarmentSource, setSelectedMaterial } = useStudioStore();
 
   const { data: allProducts = [] } = useProducts();
   const productById = new Map(allProducts.map((p) => [p.id, p]));
@@ -101,7 +103,7 @@ export function SmartSearchResults({
     setCustomGarmentImage(null);
     setGarmentSource("marketplace");
     if (product.material) setSelectedMaterial(product.material);
-    setView("studio");
+    router.push("/try-on");
     toast.success(`${product.name} loaded into the Studio.`);
   };
 

@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useRouter } from "next/navigation";
 import { useProducts } from "@/lib/api/products";
 import { productToGarment } from "@/lib/api/mapping";
 import { useDesigners } from "@/lib/api/designers";
@@ -47,13 +48,13 @@ export function GarmentSelector({ open, onOpenChange }: GarmentSelectorProps) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>("all");
   const [designerFilter, setDesignerFilter] = useState<string>("all");
+  const router = useRouter();
   const {
     selectedGarment,
     setSelectedGarment,
     customGarmentImage,
     setCustomGarmentImage,
     setGarmentSource,
-    setView,
   } = useStudioStore();
 
   const { data: products = [], isLoading } = useProducts();
@@ -355,7 +356,7 @@ export function GarmentSelector({ open, onOpenChange }: GarmentSelectorProps) {
             <button
               onClick={() => {
                 onOpenChange(false);
-                setView("marketplace");
+                router.push("/marketplace");
               }}
               className="text-xs font-medium hover:underline"
             >

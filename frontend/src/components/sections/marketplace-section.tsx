@@ -9,6 +9,7 @@ import {
   ArrowDownUp,
   ShoppingBag,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useStudioStore } from "@/lib/store";
 import { useShoppingStore } from "@/lib/shopping-store";
 import { useProducts } from "@/lib/api/products";
@@ -38,6 +39,7 @@ const SORTS = [
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 export function MarketplaceSection() {
+  const router = useRouter();
   const {
     categoryFilter,
     setCategoryFilter,
@@ -47,8 +49,6 @@ export function MarketplaceSection() {
     setCustomGarmentImage,
     setGarmentSource,
     setSelectedMaterial,
-    setView,
-    openProductPage,
   } = useStudioStore();
   const { cartCount, smartSearchActive, smartSearchResult } = useShoppingStore();
   const [sort, setSort] = useState("featured");
@@ -116,11 +116,11 @@ export function MarketplaceSection() {
     setCustomGarmentImage(null);
     setGarmentSource("marketplace");
     if (p.material) setSelectedMaterial(p.material);
-    setView("studio");
+    router.push("/try-on");
   };
 
   const handleOpenProduct = (p: Product) => {
-    openProductPage(p.id);
+    router.push(`/marketplace/${p.id}`);
   };
 
   return (

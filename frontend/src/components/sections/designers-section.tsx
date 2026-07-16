@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { BadgeCheck, MapPin, Sparkles, ArrowRight, Wand2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useStudioStore } from "@/lib/store";
 import { useAuthStore } from "@/lib/auth-store";
 import { useDesigners } from "@/lib/api/designers";
@@ -36,7 +37,8 @@ function productToGarment(p: Product): Garment {
 }
 
 export function DesignersSection() {
-  const { setSelectedGarment, setCustomGarmentImage, setGarmentSource, setView } = useStudioStore();
+  const router = useRouter();
+  const { setSelectedGarment, setCustomGarmentImage, setGarmentSource } = useStudioStore();
   const { token, isDesigner, setUser } = useAuthStore();
   const [becoming, setBecoming] = useState(false);
   const { data: designers = [], isLoading } = useDesigners();
@@ -62,7 +64,7 @@ export function DesignersSection() {
     setSelectedGarment(productToGarment(p));
     setCustomGarmentImage(null);
     setGarmentSource("designer");
-    setView("studio");
+    router.push("/try-on");
   };
 
   return (

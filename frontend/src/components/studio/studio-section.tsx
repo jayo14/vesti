@@ -12,6 +12,7 @@ import {
   ImageIcon,
   Layers,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useStudioStore } from "@/lib/store";
 import { getMaterial } from "@/lib/materials";
 import { PhotoUploader } from "./photo-uploader";
@@ -24,6 +25,7 @@ import { MaterialPicker } from "./material-picker";
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 export function StudioSection() {
+  const router = useRouter();
   const {
     personImage,
     setPersonImage,
@@ -36,7 +38,6 @@ export function StudioSection() {
     isGenerating,
     fitAnalysis,
     resetGeneration,
-    setView,
   } = useStudioStore();
 
   const [garmentPickerOpen, setGarmentPickerOpen] = useState(false);
@@ -413,7 +414,7 @@ export function StudioSection() {
       {!personImage && (
         <div className="text-center mt-6 lg:hidden">
           <button
-            onClick={() => setView("marketplace")}
+            onClick={() => router.push("/marketplace")}
             className="text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             Or browse the marketplace first →

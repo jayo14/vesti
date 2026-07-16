@@ -2,14 +2,13 @@
 
 import { motion } from "framer-motion";
 import { Sparkles, ArrowRight, Instagram, Twitter, Youtube } from "lucide-react";
-import { useStudioStore } from "@/lib/store";
+import Link from "next/link";
 import { toast } from "sonner";
 import { useState } from "react";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 export function SiteFooter() {
-  const setView = useStudioStore((s) => s.setView);
   const [email, setEmail] = useState("");
 
   const handleSubscribe = (e: React.FormEvent) => {
@@ -89,26 +88,26 @@ export function SiteFooter() {
             {
               title: "Studio",
               links: [
-                { label: "Try-On Studio", view: "studio" as const },
-                { label: "Playground", view: "playground" as const },
-                { label: "Wardrobe", view: "wardrobe" as const },
-                { label: "How it works", view: "hero" as const },
+                { label: "Try-On Studio", path: "/try-on" },
+                { label: "Playground", path: "/playground" },
+                { label: "Wardrobe", path: "/wardrobe" },
+                { label: "How it works", path: "/" },
               ],
             },
             {
               title: "Shop",
               links: [
-                { label: "Marketplace", view: "marketplace" as const },
-                { label: "Designers", view: "designers" as const },
-                { label: "Featured pieces", view: "marketplace" as const },
+                { label: "Marketplace", path: "/marketplace" },
+                { label: "Designers", path: "/designers" },
+                { label: "Featured pieces", path: "/marketplace" },
               ],
             },
             {
               title: "About",
               links: [
-                { label: "Our story", view: "hero" as const },
-                { label: "Privacy", view: "hero" as const },
-                { label: "Terms", view: "hero" as const },
+                { label: "Our story", path: "/" },
+                { label: "Privacy", path: "/" },
+                { label: "Terms", path: "/" },
               ],
             },
           ].map((col) => (
@@ -119,15 +118,13 @@ export function SiteFooter() {
               <ul className="space-y-2">
                 {col.links.map((l) => (
                   <li key={l.label}>
-                    <button
-                      onClick={() => {
-                        setView(l.view);
-                        window.scrollTo({ top: 0, behavior: "smooth" });
-                      }}
+                    <Link
+                      href={l.path}
+                      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                       className="text-sm text-foreground/80 hover:text-foreground transition-colors"
                     >
                       {l.label}
-                    </button>
+                    </Link>
                   </li>
                 ))}
               </ul>
