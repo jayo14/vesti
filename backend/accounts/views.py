@@ -117,19 +117,28 @@ class DesignerDashboardView(APIView):
         from products.models import Product
         from orders.models import Order
         from payments.models import DesignerEarning
+        import json
 
         products = Product.objects.filter(designer=request.user)
-        orders_with_items = Order.objects.filter(items__contains=[{'sellerId': str(request.user.id)}])
         earnings = DesignerEarning.objects.filter(designer=request.user, status='available')
         total_available = sum(e.net_amount for e in earnings)
 
+        all_orders = Order.objects.all()
+        designer_orders = []
+        uid = str(request.user.id)
+        for o in all_orders.order_by('-created_at')[:50]:
+            for item in (o.items or []):
+                if isinstance(item, dict) and item.get('sellerId') == uid:
+                    designer_orders.append(o)
+                    break
+
         return Response({
             'products_count': products.count(),
-            'orders_count': orders_with_items.count(),
+            'orders_count': len(designer_orders),
             'available_balance': str(total_available),
-            'products': [{'id': p.id, 'name': p.name, 'price': str(p.price)} for p in products],
+            'products': [{'id': p.id, 'name': p.name, 'price': str(p.price), 'stock': p.stock} for p in products],
             'recent_orders': [
                 {'id': o.id, 'status': o.status, 'total': str(o.total)}
-                for o in orders_with_items.order_by('-created_at')[:10]
+                for o in designer_orders[:10]
             ],
         })

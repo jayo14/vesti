@@ -28,6 +28,8 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = Product.objects.all()
+        if self.action in ("update", "partial_update", "destroy") and not self.request.user.is_staff:
+            qs = qs.filter(designer=self.request.user)
         designer_id = self.request.query_params.get("designer")
         if designer_id:
             qs = qs.filter(designer_id=designer_id)
