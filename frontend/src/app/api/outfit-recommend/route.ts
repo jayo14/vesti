@@ -6,7 +6,7 @@ import type {
   OutfitRecommendation,
   WardrobeCategory,
 } from "@/lib/types";
-import { PRODUCTS } from "@/lib/products";
+import { serverFetchProducts } from "@/lib/api/server";
 
 export const runtime = "nodejs";
 export const maxDuration = 90;
@@ -70,10 +70,12 @@ export async function POST(req: NextRequest) {
       .join("\n");
 
     // Build a compact list of marketplace products for fill-gap suggestions
-    const marketplaceSummary = PRODUCTS.slice(0, 16)
+    const products = await serverFetchProducts({ limit: 16 });
+    const marketplaceSummary = products
+      .slice(0, 16)
       .map(
         (p) =>
-          `[ID:${p.id}] ${p.name} — $${p.price}, category: ${p.category}, colors: ${p.colors.map((c) => c.name).join("/")}, tags: ${p.tags.join(",")}`
+          `[ID:${p.id}] ${p.name} — ${p.price}, category: ${p.category?.slug || ""}, colors: ${(p.colors || []).map((c) => c.name).join("/")}, tags: ${(p.tags || []).join(",")}`
       )
       .join("\n");
 
@@ -154,7 +156,7 @@ Rules:
 
     // Normalize + validate
     const validWardrobeIds = new Set(wardrobeItems.map((i) => i.id));
-    const validProductIds = new Set(PRODUCTS.map((p) => p.id));
+    const validProductIds = new Set(products.map((p) => String(p.id)));
     const validCategories: WardrobeCategory[] = [
       "shirts",
       "trousers",

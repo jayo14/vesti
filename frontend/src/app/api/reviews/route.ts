@@ -4,7 +4,7 @@ import type {
   ReviewSubmissionResponse,
   ProductReview,
 } from "@/lib/types";
-import { getProductById } from "@/lib/products";
+import { serverFetchProduct } from "@/lib/api/server";
 
 export const runtime = "nodejs";
 
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Confirm the product exists
-    const product = getProductById(body.productId);
+    const product = await serverFetchProduct(body.productId);
     if (!product) {
       return NextResponse.json<ReviewSubmissionResponse>(
         { success: false, error: "Product not found." },

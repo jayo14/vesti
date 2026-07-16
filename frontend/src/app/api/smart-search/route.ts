@@ -5,8 +5,10 @@ import type {
   SmartSearchResponse,
   SmartSearchFilters,
   SmartSearchMatch,
+  Product,
 } from "@/lib/types";
-import { PRODUCTS } from "@/lib/products";
+import { serverFetchProducts } from "@/lib/api/server";
+import { toProduct } from "@/lib/api/mapping";
 import {
   detectCurrency,
   parsePriceMention,
@@ -93,6 +95,7 @@ async function parseQueryWithLLM(query: string): Promise<LlmParsed> {
  * which aspects of the query the product satisfies.
  */
 function rankProducts(
+  products: Product[],
   filters: SmartSearchFilters,
   displayCurrency: CurrencyCode
 ): SmartSearchMatch[] {
@@ -109,7 +112,7 @@ function rankProducts(
       ? convertToUSD(filters.minPrice, filterCurrency)
       : undefined;
 
-  for (const product of PRODUCTS) {
+  for (const product of products) {
     let score = 0;
     const matchedOn: string[] = [];
     const reasonParts: string[] = [];
@@ -349,7 +352,8 @@ export async function POST(req: NextRequest) {
 
     // Step 3: Rank products locally
     const displayCurrency = (parsed.filters?.currency as CurrencyCode) || "USD";
-    const matches = rankProducts(parsed.filters || {}, displayCurrency);
+    const products = (await serverFetchProducts()).map(toProduct);
+    const matches = rankProducts(products, parsed.filters || {}, displayCurrency);
 
     // Step 4: Generate a friendly summary if the LLM didn't provide one
     let summary = parsed.summary;
