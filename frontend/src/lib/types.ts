@@ -10,7 +10,8 @@ export type ViewMode =
   | "wardrobe"
   | "playground"
   | "earnings"
-  | "admin";
+  | "admin"
+  | "designer-dashboard";
 
 export type ComparisonMode = "before-after" | "side-by-side" | "slider";
 
