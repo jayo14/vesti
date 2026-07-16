@@ -2,9 +2,21 @@
 
 import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Columns2, Layers, MoveHorizontal, Eye, EyeOff } from "lucide-react";
+import {
+  Columns2,
+  Layers,
+  MoveHorizontal,
+  Eye,
+  EyeOff,
+  Ruler,
+  Target,
+  Shirt,
+  AlertTriangle,
+  CheckCircle2,
+  XCircle,
+} from "lucide-react";
 import { useStudioStore } from "@/lib/store";
-import type { ComparisonMode } from "@/lib/types";
+import type { ComparisonMode, FitAnalysis } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const MODES: { id: ComparisonMode; label: string; icon: typeof Columns2 }[] = [
@@ -18,6 +30,7 @@ interface ComparisonViewerProps {
   afterImage: string;
   beforeLabel?: string;
   afterLabel?: string;
+  fitAnalysis?: FitAnalysis | null;
 }
 
 export function ComparisonViewer({
@@ -25,6 +38,7 @@ export function ComparisonViewer({
   afterImage,
   beforeLabel = "Before",
   afterLabel = "After",
+  fitAnalysis,
 }: ComparisonViewerProps) {
   const mode = useStudioStore((s) => s.comparisonMode);
   const setMode = useStudioStore((s) => s.setComparisonMode);
@@ -237,6 +251,95 @@ export function ComparisonViewer({
             </motion.div>
           )}
         </AnimatePresence>
+      </div>
+
+      {/* Fit Analysis card */}
+      {fitAnalysis && <FitAnalysisCard analysis={fitAnalysis} />}
+    </div>
+  );
+}
+
+function FitAnalysisCard({ analysis }: { analysis: FitAnalysis }) {
+  const fitIcons: Record<string, typeof CheckCircle2> = {
+    true_to_size: CheckCircle2,
+    runs_small: AlertTriangle,
+    runs_large: XCircle,
+  };
+  const fitColors: Record<string, string> = {
+    true_to_size: "text-green-600 dark:text-green-400",
+    runs_small: "text-amber-600 dark:text-amber-400",
+    runs_large: "text-red-600 dark:text-red-400",
+  };
+  const fitLabels: Record<string, string> = {
+    true_to_size: "True to Size",
+    runs_small: "Runs Small",
+    runs_large: "Runs Large",
+  };
+
+  const FitIcon = fitIcons[analysis.estimated_fit] || CheckCircle2;
+  const fitColor = fitColors[analysis.estimated_fit] || "";
+  const fitLabel = fitLabels[analysis.estimated_fit] || analysis.estimated_fit;
+
+  return (
+    <div className="mt-4 p-4 rounded-2xl border border-border bg-card shadow-premium">
+      <div className="flex items-center gap-2 mb-3">
+        <Ruler className="w-4 h-4 text-champagne" />
+        <h4 className="font-serif text-base">Fit Analysis</h4>
+      </div>
+
+      <div className="space-y-3">
+        {/* Estimated fit badge */}
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground">Estimated fit</span>
+          <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${fitColor}`}>
+            <FitIcon className="w-3.5 h-3.5" />
+            {fitLabel}
+          </span>
+        </div>
+
+        {/* Recommended size */}
+        {analysis.recommended_size && (
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">Recommended size</span>
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium">
+              <Shirt className="w-3.5 h-3.5 text-champagne" />
+              {analysis.recommended_size}
+            </span>
+          </div>
+        )}
+
+        {/* Style match percentage */}
+        <div className="space-y-1">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">Style match</span>
+            <span className="inline-flex items-center gap-1 text-xs font-medium">
+              <Target className="w-3 h-3 text-champagne" />
+              {analysis.style_match_pct}%
+            </span>
+          </div>
+          <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+            <motion.div
+              className="h-full rounded-full bg-gradient-to-r from-champagne to-foreground"
+              initial={{ width: 0 }}
+              animate={{ width: `${analysis.style_match_pct}%` }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+            />
+          </div>
+        </div>
+
+        {/* Notes */}
+        {analysis.sleeve_note && (
+          <div className="flex gap-2 text-[11px] text-muted-foreground leading-relaxed">
+            <span className="mt-0.5 w-1 h-1 rounded-full bg-champagne flex-shrink-0" />
+            <span>{analysis.sleeve_note}</span>
+          </div>
+        )}
+        {analysis.waist_note && (
+          <div className="flex gap-2 text-[11px] text-muted-foreground leading-relaxed">
+            <span className="mt-0.5 w-1 h-1 rounded-full bg-champagne flex-shrink-0" />
+            <span>{analysis.waist_note}</span>
+          </div>
+        )}
       </div>
     </div>
   );
