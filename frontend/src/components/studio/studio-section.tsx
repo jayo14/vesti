@@ -34,6 +34,7 @@ export function StudioSection() {
     setSelectedMaterial,
     resultImage,
     isGenerating,
+    fitAnalysis,
     resetGeneration,
     setView,
   } = useStudioStore();
@@ -227,6 +228,7 @@ export function StudioSection() {
                         afterImage={resultImage}
                         beforeLabel="You"
                         afterLabel="AI Look"
+                        fitAnalysis={fitAnalysis}
                       />
                     </motion.div>
                   ) : isGenerating ? (
