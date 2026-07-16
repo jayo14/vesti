@@ -63,10 +63,14 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             'name', 'description', 'price', 'currency', 'category', 'designer',
             'image_url', 'images', 'sizes', 'colors', 'tags', 'stock', 'stock_count',
             'rating', 'featured', 'material', 'fit_type', 'ships_from', 'ships_within',
-            'returns', 'is_published',
+            'returns', 'is_published', 'moderation_status',
         ]
+        read_only_fields = ['moderation_status']
 
     def create(self, validated_data):
+        # New products start as draft; designer can submit for review
+        validated_data.setdefault('moderation_status', 'draft')
+        validated_data.setdefault('is_published', False)
         image_url = validated_data.pop('image_url', '')
         instance = super().create(validated_data)
         if image_url and not instance.images:
@@ -75,6 +79,8 @@ class ProductCreateSerializer(serializers.ModelSerializer):
         return instance
 
     def update(self, instance, validated_data):
+        # Don't allow designer to overwrite moderation_status via update
+        validated_data.pop('moderation_status', None)
         image_url = validated_data.pop('image_url', '')
         instance = super().update(instance, validated_data)
         if image_url:

@@ -1,6 +1,6 @@
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
-from .models import User
+from .models import User, DesignerApplication
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -54,3 +54,11 @@ class UserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'bio', 'avatar', 'is_designer', 'date_joined', 'phone']
+
+
+class DesignerApplicationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DesignerApplication
+        fields = ['id', 'brand_name', 'bio', 'portfolio_links', 'status', 'rejection_reason',
+                  'created_at', 'updated_at']
+        read_only_fields = ['id', 'status', 'rejection_reason', 'created_at', 'updated_at']

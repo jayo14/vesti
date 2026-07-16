@@ -148,6 +148,42 @@ def become_designer(request):
     return Response({'detail': 'You are now a designer.', 'is_designer': True})
 
 
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def apply_designer(request):
+    from .serializers import DesignerApplicationSerializer
+    serializer = DesignerApplicationSerializer(data=request.data, context={'request': request})
+    serializer.is_valid(raise_exception=True)
+    serializer.save(user=request.user)
+    return Response({'detail': 'Application submitted. Awaiting review.', 'status': 'pending'})
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAdminUser])
+def review_designer_application(request, application_id):
+    from .models import DesignerApplication
+    try:
+        app = DesignerApplication.objects.get(id=application_id, status='pending')
+    except DesignerApplication.DoesNotExist:
+        return Response({'detail': 'Application not found or already reviewed.'}, status=status.HTTP_404_NOT_FOUND)
+
+    action = request.data.get('action')
+    if action == 'approve':
+        app.status = 'approved'
+        app.user.is_designer = True
+        app.user.save()
+        app.reviewed_by = request.user
+        app.save()
+        return Response({'detail': 'Designer application approved.', 'status': 'approved'})
+    elif action == 'reject':
+        app.status = 'rejected'
+        app.rejection_reason = request.data.get('rejection_reason', '')
+        app.reviewed_by = request.user
+        app.save()
+        return Response({'detail': 'Designer application rejected.', 'status': 'rejected'})
+    return Response({'detail': 'Invalid action. Use "approve" or "reject".'}, status=status.HTTP_400_BAD_REQUEST)
+
+
 class DesignerDashboardView(APIView):
     permission_classes = [permissions.IsAuthenticated, IsDesigner]
 
@@ -170,11 +206,39 @@ class DesignerDashboardView(APIView):
                     designer_orders.append(o)
                     break
 
+        # Try-on metrics per product
+        from studio.models import Generation
+        from django.utils import timezone
+        from datetime import timedelta
+
+        product_ids = [p.id for p in products]
+        tryon_data = {}
+        for pid in product_ids:
+            gens = Generation.objects.filter(product_id=pid)
+            total = gens.count()
+            recent_cutoff = timezone.now() - timedelta(days=30)
+            recent = gens.filter(created_at__gte=recent_cutoff).count()
+            tryon_data[pid] = {"total_tryons": total, "recent_tryons": recent}
+
         return Response({
             'products_count': products.count(),
             'orders_count': len(designer_orders),
             'available_balance': str(total_available),
-            'products': [{'id': p.id, 'name': p.name, 'price': str(p.price), 'stock': p.stock, 'image_url': p.images[0] if p.images else None, 'is_published': p.is_published, 'category_id': p.category_id, 'description': p.description} for p in products],
+            'products': [
+                {
+                    'id': p.id, 'name': p.name, 'price': str(p.price), 'stock': p.stock,
+                    'image_url': p.images[0] if p.images else None,
+                    'is_published': p.is_published,
+                    'moderation_status': p.moderation_status,
+                    'rejection_reason': p.rejection_reason,
+                    'material': p.material,
+                    'fit_type': p.fit_type,
+                    'category_id': p.category_id, 'description': p.description,
+                    'tryons_total': tryon_data.get(p.id, {}).get('total_tryons', 0),
+                    'tryons_recent': tryon_data.get(p.id, {}).get('recent_tryons', 0),
+                }
+                for p in products
+            ],
             'recent_orders': [
                 {'id': o.id, 'status': o.status, 'total': str(o.total)}
                 for o in designer_orders[:10]

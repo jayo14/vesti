@@ -1,6 +1,10 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from .views import RegisterView, MeView, PasswordResetRequestView, PasswordResetConfirmView, DesignersListView, UsersListView, my_role, become_designer, DesignerDashboardView, manage_user, email_login
+from .views import (
+    RegisterView, MeView, PasswordResetRequestView, PasswordResetConfirmView,
+    DesignersListView, UsersListView, my_role, become_designer, DesignerDashboardView,
+    manage_user, email_login, apply_designer, review_designer_application,
+)
 
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
@@ -13,6 +17,8 @@ urlpatterns = [
     path('users/', UsersListView.as_view(), name='users'),
     path('role/', my_role, name='my-role'),
     path('become-designer/', become_designer, name='become-designer'),
+    path('apply-designer/', apply_designer, name='apply-designer'),
+    path('applications/<int:application_id>/review/', review_designer_application, name='review-application'),
     path('dashboard/', DesignerDashboardView.as_view(), name='designer-dashboard'),
     path('users/<int:user_id>/', manage_user, name='manage-user'),
 ]

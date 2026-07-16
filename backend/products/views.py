@@ -35,9 +35,12 @@ class ProductViewSet(viewsets.ModelViewSet):
             qs = qs.filter(designer=self.request.user)
         if self.action == "list" and not self.request.user.is_staff:
             if self.request.user.is_authenticated:
-                qs = qs.filter(Q(is_published=True) | Q(designer=self.request.user))
+                qs = qs.filter(
+                    Q(moderation_status="published") |
+                    Q(designer=self.request.user)
+                )
             else:
-                qs = qs.filter(is_published=True)
+                qs = qs.filter(moderation_status="published")
         designer_id = self.request.query_params.get("designer")
         if designer_id:
             qs = qs.filter(designer_id=designer_id)
@@ -70,7 +73,7 @@ class MyProductsView(APIView):
     permission_classes = [permissions.IsAuthenticated, IsDesigner]
 
     def get(self, request):
-        products = Product.objects.filter(designer=request.user)
+        products = Product.objects.filter(designer=request.user).select_related("category")
         return Response([
             {
                 'id': p.id,
@@ -80,6 +83,10 @@ class MyProductsView(APIView):
                 'category': p.category.name if p.category else None,
                 'image_url': p.images[0] if p.images else None,
                 'is_published': p.is_published,
+                'moderation_status': p.moderation_status,
+                'rejection_reason': p.rejection_reason,
+                'material': p.material,
+                'fit_type': p.fit_type,
                 'created_at': p.created_at,
             }
             for p in products
@@ -147,9 +154,10 @@ class OptionsView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
+        from .models import MATERIAL_CHOICES, FIT_TYPE_CHOICES
         return Response({
-            "materials": ["Cotton", "Silk", "Denim", "Leather", "Linen", "Wool", "Polyester", "Velvet", "Cashmere"],
+            "materials": [{"value": k, "label": v} for k, v in MATERIAL_CHOICES],
             "colours": ["Black", "White", "Red", "Blue", "Green", "Beige", "Navy", "Grey", "Pink", "Purple"],
-            "fits": ["Slim", "Regular", "Oversized"],
+            "fits": [{"value": k, "label": v} for k, v in FIT_TYPE_CHOICES],
             "sizes": ["XS", "S", "M", "L", "XL", "XXL"],
         })
