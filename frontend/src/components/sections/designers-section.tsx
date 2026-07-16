@@ -28,7 +28,8 @@ export function DesignersSection() {
       const d = await r.json();
       if (r.ok) {
         toast.success("You're now a designer!");
-        setUser({ ...useAuthStore.getState().user!, is_designer: true });
+        const me = await fetch(`${API_BASE}/api/auth/me/`, { headers: { Authorization: `Bearer ${token}` } });
+        if (me.ok) setUser(await me.json());
       } else { toast.error(d.detail || "Failed"); }
     } catch { toast.error("Something went wrong"); }
     finally { setBecoming(false); }
