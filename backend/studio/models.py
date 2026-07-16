@@ -34,6 +34,29 @@ class Generation(models.Model):
         (STATUS_FAILED, "Failed"),
     ]
 
+    # Structured failure codes propagated from vision_engine so the admin
+    # health dashboard can group failures without parsing free text.
+    FAILURE_NO_PERSON = "no_person_detected"
+    FAILURE_MULTIPLE_PEOPLE = "multiple_people"
+    FAILURE_LOW_POSE_CONFIDENCE = "low_pose_confidence"
+    FAILURE_SEGMENTATION_FAILED = "segmentation_failed"
+    FAILURE_MODEL_UNAVAILABLE = "model_unavailable"
+    FAILURE_MODEL_TIMEOUT = "model_timeout"
+    FAILURE_PIPELINE_UNREACHABLE = "pipeline_unreachable"
+    FAILURE_EMPTY_RESULT = "empty_result"
+    FAILURE_UNKNOWN = "unknown"
+    FAILURE_CHOICES = [
+        (FAILURE_NO_PERSON, "No person detected"),
+        (FAILURE_MULTIPLE_PEOPLE, "Multiple people in frame"),
+        (FAILURE_LOW_POSE_CONFIDENCE, "Low pose confidence"),
+        (FAILURE_SEGMENTATION_FAILED, "Garment segmentation failed"),
+        (FAILURE_MODEL_UNAVAILABLE, "Model unavailable"),
+        (FAILURE_MODEL_TIMEOUT, "Model timeout"),
+        (FAILURE_PIPELINE_UNREACHABLE, "Vision pipeline unreachable"),
+        (FAILURE_EMPTY_RESULT, "Empty result from pipeline"),
+        (FAILURE_UNKNOWN, "Unknown error"),
+    ]
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="generations"
     )
@@ -57,8 +80,19 @@ class Generation(models.Model):
         max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING
     )
     error = models.TextField(blank=True)
+    failure_reason = models.CharField(
+        max_length=40, choices=FAILURE_CHOICES, blank=True, default="",
+        help_text="Structured failure code from the vision pipeline (blank on success).",
+    )
+    latency_ms = models.IntegerField(
+        default=0,
+        help_text="Wall-clock duration from row creation to terminal status.",
+    )
     model = models.CharField(
         max_length=60, blank=True, help_text="Which try-on backend served the request."
+    )
+    flagged = models.BooleanField(
+        default=False, help_text="Admin flag for inappropriate or bad output."
     )
     created_at = models.DateTimeField(auto_now_add=True)
 

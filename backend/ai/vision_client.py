@@ -15,13 +15,26 @@ from django.conf import settings
 
 
 class VisionEngineError(Exception):
-    """Raised when vision_engine returns an error or is unreachable."""
+    """Raised when vision_engine returns an error or is unreachable.
 
-    def __init__(self, message: str, *, status: int = 502, hint: str | None = None) -> None:
+    ``code`` is a stable machine-readable identifier (e.g. ``no_person_detected``,
+    ``model_timeout``) that survives all the way to persistence so the admin
+    AI-health dashboard can group failures without parsing free-text messages.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        status: int = 502,
+        hint: str | None = None,
+        code: str | None = None,
+    ) -> None:
         super().__init__(message)
         self.message = message
         self.status = status
         self.hint = hint
+        self.code = code or "unknown"
 
 
 def _base() -> str:
@@ -44,6 +57,7 @@ def _call(path: str, payload: dict, timeout: int = 120) -> dict:
             "The vision service is unreachable. Please try again shortly.",
             status=503,
             hint="The image-processing service may be starting up.",
+            code="pipeline_unreachable",
         ) from exc
 
     if resp.ok:
@@ -54,7 +68,7 @@ def _call(path: str, payload: dict, timeout: int = 120) -> dict:
         body = resp.json()
     except ValueError:
         body = {}
-    code = body.get("code")
+    code = body.get("code") or "unknown"
     message = body.get("message") or body.get("detail") or f"Vision pipeline error ({resp.status_code})."
     hint = body.get("hint")
     status = resp.status_code if 400 <= resp.status_code < 500 else 502
@@ -78,7 +92,7 @@ def _call(path: str, payload: dict, timeout: int = 120) -> dict:
     elif code in ("model_unavailable", "model_timeout"):
         hint = hint or "The image model is temporarily busy. Please try again."
         status = 503 if code == "model_unavailable" else 504
-    raise VisionEngineError(message, status=status, hint=hint)
+    raise VisionEngineError(message, status=status, hint=hint, code=code)
 
 
 def detect(person_image: str) -> dict:

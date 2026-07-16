@@ -384,6 +384,8 @@ class TryOnView(APIView):
             garment_image=garment_image or "",
             status=Generation.STATUS_PROCESSING,
         )
+        import time
+        started_at = time.monotonic()
 
         try:
             from .vision_client import (
@@ -407,7 +409,11 @@ class TryOnView(APIView):
             )
             garment_cutout = seg_resp.get("cutout_base64") or seg_resp.get("cutout_image_url")
             if not garment_cutout:
-                raise VisionEngineError("Could not isolate the garment from the image.", status=422)
+                raise VisionEngineError(
+                    "Could not isolate the garment from the image.",
+                    status=422,
+                    code=Generation.FAILURE_SEGMENTATION_FAILED,
+                )
 
             tryon_resp = run_tryon(
                 person_image,
@@ -417,7 +423,11 @@ class TryOnView(APIView):
             )
             result = tryon_resp.get("result_base64") or tryon_resp.get("result_image_url")
             if not result:
-                raise VisionEngineError("Try-on produced no image.", status=502)
+                raise VisionEngineError(
+                    "Try-on produced no image.",
+                    status=502,
+                    code=Generation.FAILURE_EMPTY_RESULT,
+                )
 
             enhance_resp = run_enhance(result)
             final_image = enhance_resp.get("enhanced_base64") or enhance_resp.get("enhanced_image_url") or result
@@ -428,6 +438,7 @@ class TryOnView(APIView):
             generation.fit_confidence = tryon_resp.get("fit_confidence", 0.0)
             generation.model = tryon_resp.get("model", "")
             generation.status = Generation.STATUS_COMPLETED
+            generation.latency_ms = int((time.monotonic() - started_at) * 1000)
             generation.save()
 
             return Response({
@@ -441,6 +452,8 @@ class TryOnView(APIView):
         except VisionEngineError as exc:
             generation.status = Generation.STATUS_FAILED
             generation.error = exc.message
+            generation.failure_reason = exc.code or Generation.FAILURE_UNKNOWN
+            generation.latency_ms = int((time.monotonic() - started_at) * 1000)
             generation.save()
             return Response(
                 {"success": False, "error": exc.message, "hint": exc.hint},
@@ -449,6 +462,8 @@ class TryOnView(APIView):
         except Exception as exc:
             generation.status = Generation.STATUS_FAILED
             generation.error = str(exc)
+            generation.failure_reason = Generation.FAILURE_UNKNOWN
+            generation.latency_ms = int((time.monotonic() - started_at) * 1000)
             generation.save()
             return Response(
                 {"success": False, "error": "Try-on failed unexpectedly. Please try again."},
