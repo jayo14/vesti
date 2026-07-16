@@ -209,12 +209,15 @@ export function DesignerDashboardSection() {
                 <h3 className="font-serif text-lg mt-8 mb-4">Recent Orders</h3>
                 <div className="space-y-2">
                   {dash.recent_orders.map((o: any) => (
-                    <div key={o.id} className="flex items-center justify-between p-4 rounded-2xl bg-muted/40">
-                      <span className="text-sm font-medium">Order #{o.id}</span>
-                      <span className={cn("text-xs px-2 py-0.5 rounded-full", {
-                        "bg-amber-500/10 text-amber-600": o.status === "pending",
-                        "bg-emerald-500/10 text-emerald-600": o.status === "paid",
-                      })}>{o.status}</span>
+                    <div key={o.id} className="p-4 rounded-2xl bg-muted/40">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium">Order #{o.id}</span>
+                        <span className={cn("text-xs px-2 py-0.5 rounded-full", {
+                          "bg-amber-500/10 text-amber-600": o.status === "pending",
+                          "bg-emerald-500/10 text-emerald-600": o.status === "paid",
+                        })}>{o.status}</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground">₦{parseFloat(o.total || "0").toLocaleString()}</div>
                     </div>
                   ))}
                 </div>
