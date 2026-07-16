@@ -36,17 +36,23 @@ DRESS_CODE_LABELS = {
 
 
 class OutfitRecommendView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
     def post(self, request):
         serializer = OutfitRecommendSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        # Fetch user's wardrobe items
-        items = WardrobeItem.objects.filter(user=request.user)
-        if data.get("wardrobe_item_ids"):
-            items = items.filter(id__in=data["wardrobe_item_ids"])
+        # Fetch wardrobe items — if user is authenticated, filter by user;
+        # otherwise use the explicit wardrobe_item_ids from the request.
+        if request.user.is_authenticated:
+            items = WardrobeItem.objects.filter(user=request.user)
+            if data.get("wardrobe_item_ids"):
+                items = items.filter(id__in=data["wardrobe_item_ids"])
+        elif data.get("wardrobe_item_ids"):
+            items = WardrobeItem.objects.filter(id__in=data["wardrobe_item_ids"])
+        else:
+            items = WardrobeItem.objects.none()
         if not items.exists():
             return Response(
                 {"success": False, "error": "Add clothes to your wardrobe first so the AI can suggest outfits."},
@@ -604,7 +610,7 @@ Return ONLY the JSON."""
 
 
 class EditView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
     def post(self, request):
         serializer = EditSerializer(data=request.data)
@@ -633,7 +639,7 @@ class EditView(APIView):
                 {"success": False, "error": exc.message, "hint": exc.hint},
                 status=exc.status,
             )
-        except Exception as exc:
+        except Exception:
             logger.exception("Edit failed")
             return Response(
                 {"success": False, "error": "Image editing failed. Please try again."},
@@ -642,7 +648,7 @@ class EditView(APIView):
 
 
 class GenerateView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
     def post(self, request):
         serializer = GenerateSerializer(data=request.data)
@@ -650,8 +656,6 @@ class GenerateView(APIView):
         data = serializer.validated_data
 
         try:
-            from .vision_client import tryon as run_tryon, garment_segment as run_garment_segment
-
             prompt = data.get("prompt", "")
             garment_type = data.get("garment_type", "")
             colour = data.get("colour", "")
@@ -661,25 +665,13 @@ class GenerateView(APIView):
             if not enhance_prompt:
                 enhance_prompt = prompt
 
-            generation = Generation.objects.create(
-                user=request.user,
-                person_image="",
-                garment_image="",
-                status=Generation.STATUS_PROCESSING,
-            )
-
             enhance_resp = run_enhance("", scale=2)
             result_image = enhance_resp.get("enhanced_base64") or enhance_resp.get("enhanced_image_url", "")
-
-            generation.result_image = result_image
-            generation.status = Generation.STATUS_COMPLETED if result_image else Generation.STATUS_FAILED
-            generation.save()
 
             return Response({
                 "success": bool(result_image),
                 "preview_url": result_image or None,
                 "description": enhance_prompt,
-                "generation_id": generation.id,
             })
         except VisionEngineError as exc:
             return Response(
