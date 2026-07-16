@@ -9,6 +9,7 @@ import type {
   SavedLook,
   EditAction,
   EditableComponent,
+  FitAnalysis,
 } from "@/lib/types";
 import type { MaterialId } from "@/lib/materials";
 
@@ -47,10 +48,12 @@ interface StudioState {
   generationProgress: number;
   generationStage: string;
   resultImage: string | null;
+  fitAnalysis: FitAnalysis | null;
   setIsGenerating: (v: boolean) => void;
   setGenerationProgress: (n: number) => void;
   setGenerationStage: (s: string) => void;
   setResultImage: (img: string | null) => void;
+  setFitAnalysis: (a: FitAnalysis | null) => void;
   resetGeneration: () => void;
 
   // Comparison
@@ -131,16 +134,19 @@ export const useStudioStore = create<StudioState>()(
       generationProgress: 0,
       generationStage: "",
       resultImage: null,
+      fitAnalysis: null,
       setIsGenerating: (isGenerating) => set({ isGenerating }),
       setGenerationProgress: (generationProgress) => set({ generationProgress }),
       setGenerationStage: (generationStage) => set({ generationStage }),
       setResultImage: (resultImage) => set({ resultImage }),
+      setFitAnalysis: (fitAnalysis) => set({ fitAnalysis }),
       resetGeneration: () =>
         set({
           isGenerating: false,
           generationProgress: 0,
           generationStage: "",
           resultImage: null,
+          fitAnalysis: null,
         }),
 
       comparisonMode: "slider",
