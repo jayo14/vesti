@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'studio',
     'ai',
     'payments',
+    'disputes',
 ]
 
 MIDDLEWARE = [
@@ -132,6 +133,17 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+# Email — used for best-effort applicant notifications when EMAIL_HOST is a
+# real SMTP server. Local dev falls back to the console backend and _notify_*
+# helpers no-op when EMAIL_HOST is empty or "localhost".
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'no-reply@vesti.local')
 
 # ALATPay Configuration
 ALATPAY_PUBLIC_KEY = os.environ.get('ALATPAY_PUBLIC_KEY', '')
