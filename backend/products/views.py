@@ -10,6 +10,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ["name", "description", "category__name"]
+    ordering = ["-created_at"]
 
     def get_serializer_class(self):
         if self.action == "retrieve":
@@ -33,7 +34,10 @@ class ProductViewSet(viewsets.ModelViewSet):
         if self.action in ("update", "partial_update", "destroy") and not self.request.user.is_staff:
             qs = qs.filter(designer=self.request.user)
         if self.action == "list" and not self.request.user.is_staff:
-            qs = qs.filter(Q(is_published=True) | Q(designer=self.request.user))
+            if self.request.user.is_authenticated:
+                qs = qs.filter(Q(is_published=True) | Q(designer=self.request.user))
+            else:
+                qs = qs.filter(is_published=True)
         designer_id = self.request.query_params.get("designer")
         if designer_id:
             qs = qs.filter(designer_id=designer_id)

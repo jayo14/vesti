@@ -1,0 +1,1042 @@
+[
+  {
+    "id": "p1",
+    "name": "Structured Wool Blazer",
+    "sellerId": "d1",
+    "category": "outerwear",
+    "price": 1280,
+    "originalPrice": 1480,
+    "description": "Single-breasted blazer in Italian virgin wool. Architectural shoulders, hand-finished lapels, and a sculpted silhouette that holds its shape. Fully canvassed construction, horn buttons, and a silk-lined interior.",
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&h=1000&fit=crop&q=80",
+        "alt": "Front view of structured wool blazer"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=800&h=1000&fit=crop&q=80",
+        "alt": "Side profile of the blazer"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&h=1000&fit=crop&q=80",
+        "alt": "Detail of lapels and buttons"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1525507119028-ed4c629a60a3?w=800&h=1000&fit=crop&q=80",
+        "alt": "Back view"
+      }
+    ],
+    "colors": [
+      {
+        "name": "Charcoal",
+        "hex": "#2E2E33"
+      },
+      {
+        "name": "Camel",
+        "hex": "#B0875A"
+      },
+      {
+        "name": "Black",
+        "hex": "#0E0E12"
+      }
+    ],
+    "sizes": [
+      {
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "label": "L",
+        "inStock": false
+      },
+      {
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "tags": [
+      "minimal",
+      "tailoring",
+      "wool"
+    ],
+    "featured": true,
+    "availability": "in-stock",
+    "stockCount": 18,
+    "rating": 4.8,
+    "material": "velvet",
+    "shipsFrom": "Paris, France",
+    "shipsWithin": "3–5 business days",
+    "returns": "30-day free returns"
+  },
+  {
+    "id": "p2",
+    "name": "Wrap Trench Coat",
+    "sellerId": "d1",
+    "category": "outerwear",
+    "price": 2150,
+    "originalPrice": null,
+    "description": "Belted wrap trench in stone cotton gabardine. Storm flap, raglan sleeves, and a sweeping hem that moves with you. Water-resistant finish, throat latch, and a removable hood.",
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=800&h=1000&fit=crop&q=80",
+        "alt": "Wrap trench coat front"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800&h=1000&fit=crop&q=80",
+        "alt": "Trench coat worn with belt tied"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=800&h=1000&fit=crop&q=80",
+        "alt": "Back of the coat"
+      }
+    ],
+    "colors": [
+      {
+        "name": "Stone",
+        "hex": "#C8B98D"
+      },
+      {
+        "name": "Black",
+        "hex": "#0E0E12"
+      },
+      {
+        "name": "Olive",
+        "hex": "#5A6042"
+      }
+    ],
+    "sizes": [
+      {
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "label": "XL",
+        "inStock": false
+      }
+    ],
+    "tags": [
+      "classic",
+      "outerwear",
+      "neutral"
+    ],
+    "featured": false,
+    "availability": "in-stock",
+    "stockCount": 8,
+    "rating": 4.7,
+    "material": "cotton",
+    "shipsFrom": "Paris, France",
+    "shipsWithin": "3–5 business days",
+    "returns": "30-day free returns"
+  },
+  {
+    "id": "p3",
+    "name": "Tailored Wool Trousers",
+    "sellerId": "d1",
+    "category": "bottoms",
+    "price": 620,
+    "originalPrice": null,
+    "description": "High-rise wide-leg trousers in charcoal wool. Pressed crease, side pockets, floor-skimming length. Cut for a fluid, elongated silhouette.",
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=800&h=1000&fit=crop&q=80",
+        "alt": "Tailored wool trousers"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=800&h=1000&fit=crop&q=80",
+        "alt": "Trousers styling"
+      }
+    ],
+    "colors": [
+      {
+        "name": "Charcoal",
+        "hex": "#2E2E33"
+      },
+      {
+        "name": "Cream",
+        "hex": "#E8E4D8"
+      }
+    ],
+    "sizes": [
+      {
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "label": "M",
+        "inStock": false
+      },
+      {
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "tags": [
+      "tailoring",
+      "wide-leg",
+      "wool"
+    ],
+    "featured": false,
+    "availability": "low-stock",
+    "stockCount": 4,
+    "rating": 4.6,
+    "material": "linen",
+    "shipsFrom": "Paris, France",
+    "shipsWithin": "3–5 business days",
+    "returns": "30-day free returns"
+  },
+  {
+    "id": "p4",
+    "name": "Silk Slip Dress",
+    "sellerId": "d2",
+    "category": "dresses",
+    "price": 980,
+    "originalPrice": null,
+    "description": "Bias-cut slip dress in pure Como silk. Cowl neckline, delicate spaghetti straps, and a fluid drape that skims the body. French seams throughout.",
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=800&h=1000&fit=crop&q=80",
+        "alt": "Silk slip dress front"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1623609163859-ca93c959b99c?w=800&h=1000&fit=crop&q=80",
+        "alt": "Slip dress side view"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=800&h=1000&fit=crop&q=80",
+        "alt": "Back detail"
+      }
+    ],
+    "colors": [
+      {
+        "name": "Champagne",
+        "hex": "#D9C7A3"
+      },
+      {
+        "name": "Black",
+        "hex": "#0E0E12"
+      },
+      {
+        "name": "Burgundy",
+        "hex": "#5B1F2E"
+      }
+    ],
+    "sizes": [
+      {
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "label": "XL",
+        "inStock": false
+      }
+    ],
+    "tags": [
+      "silk",
+      "evening",
+      "minimal"
+    ],
+    "featured": true,
+    "availability": "in-stock",
+    "stockCount": 14,
+    "rating": 4.9,
+    "material": "silk",
+    "shipsFrom": "Milan, Italy",
+    "shipsWithin": "5–7 business days",
+    "returns": "14-day returns (hygiene)"
+  },
+  {
+    "id": "p5",
+    "name": "Pleated Maxi Skirt",
+    "sellerId": "d2",
+    "category": "bottoms",
+    "price": 720,
+    "originalPrice": null,
+    "description": "Knife-pleated maxi skirt in flowing silk crepe. Elastic waist, floor-length, with a subtle swish as you walk. Effortlessly elegant.",
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1583496661160-fb5886a13d44?w=800&h=1000&fit=crop&q=80",
+        "alt": "Pleated maxi skirt"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1551803091-e20673f15770?w=800&h=1000&fit=crop&q=80",
+        "alt": "Skirt in motion"
+      }
+    ],
+    "colors": [
+      {
+        "name": "Bone",
+        "hex": "#E8E4D8"
+      },
+      {
+        "name": "Olive",
+        "hex": "#5A6042"
+      }
+    ],
+    "sizes": [
+      {
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "label": "L",
+        "inStock": false
+      }
+    ],
+    "tags": [
+      "silk",
+      "pleated",
+      "elegant"
+    ],
+    "featured": false,
+    "availability": "in-stock",
+    "stockCount": 11,
+    "rating": 4.7,
+    "material": "chiffon",
+    "shipsFrom": "Milan, Italy",
+    "shipsWithin": "5–7 business days",
+    "returns": "14-day returns (hygiene)"
+  },
+  {
+    "id": "p6",
+    "name": "Lace Blouse",
+    "sellerId": "d2",
+    "category": "tops",
+    "price": 540,
+    "originalPrice": null,
+    "description": "Romantic lace blouse with a pussy-bow tie. Sheer floral lace over a silk camisole lining, mother-of-pearl buttons, French seams. A timeless, feminine silhouette.",
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1485231183945-fffde7cc051e?w=800&h=1000&fit=crop&q=80",
+        "alt": "Lace blouse front"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1564257577154-75bd1e2db3bc?w=800&h=1000&fit=crop&q=80",
+        "alt": "Lace detail"
+      }
+    ],
+    "colors": [
+      {
+        "name": "Ivory",
+        "hex": "#F4E9DC"
+      },
+      {
+        "name": "Black",
+        "hex": "#0E0E12"
+      }
+    ],
+    "sizes": [
+      {
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "label": "L",
+        "inStock": true
+      }
+    ],
+    "tags": [
+      "lace",
+      "blouse",
+      "romantic"
+    ],
+    "featured": false,
+    "availability": "in-stock",
+    "stockCount": 9,
+    "rating": 4.6,
+    "material": "lace",
+    "shipsFrom": "Milan, Italy",
+    "shipsWithin": "5–7 business days",
+    "returns": "14-day returns (hygiene)"
+  },
+  {
+    "id": "p7",
+    "name": "Technical Parka",
+    "sellerId": "d3",
+    "category": "outerwear",
+    "price": 890,
+    "originalPrice": null,
+    "description": "Asymmetric technical parka in matte water-repellent nylon. Concealed zips, oversized hood, and a sculpted silhouette inspired by Tokyo rain. Three-pocket front, adjustable hem.",
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800&h=1000&fit=crop&q=80",
+        "alt": "Technical parka front"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=800&h=1000&fit=crop&q=80",
+        "alt": "Hood detail"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=800&h=1000&fit=crop&q=80",
+        "alt": "Back of parka"
+      }
+    ],
+    "colors": [
+      {
+        "name": "Matte Black",
+        "hex": "#0E0E12"
+      },
+      {
+        "name": "Concrete",
+        "hex": "#7A7A7F"
+      }
+    ],
+    "sizes": [
+      {
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "tags": [
+      "technical",
+      "streetwear",
+      "nylon"
+    ],
+    "featured": true,
+    "availability": "in-stock",
+    "stockCount": 22,
+    "rating": 4.8,
+    "material": "denim",
+    "shipsFrom": "Tokyo, Japan",
+    "shipsWithin": "7–10 business days",
+    "returns": "21-day returns"
+  },
+  {
+    "id": "p8",
+    "name": "Layered Knit Sweater",
+    "sellerId": "d3",
+    "category": "knitwear",
+    "price": 460,
+    "originalPrice": null,
+    "description": "Oversized crewneck in merino wool. Drop shoulders, ribbed cuffs, and an architectural drape. Designed to layer — looks intentional over a silk tee or under a coat.",
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&h=1000&fit=crop&q=80",
+        "alt": "Layered knit sweater"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=800&h=1000&fit=crop&q=80",
+        "alt": "Knit texture detail"
+      }
+    ],
+    "colors": [
+      {
+        "name": "Ecru",
+        "hex": "#E8E4D8"
+      },
+      {
+        "name": "Slate",
+        "hex": "#3A3F4A"
+      }
+    ],
+    "sizes": [
+      {
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "tags": [
+      "knit",
+      "oversized",
+      "wool"
+    ],
+    "featured": false,
+    "availability": "in-stock",
+    "stockCount": 16,
+    "rating": 4.5,
+    "material": "cotton",
+    "shipsFrom": "Tokyo, Japan",
+    "shipsWithin": "7–10 business days",
+    "returns": "21-day returns"
+  },
+  {
+    "id": "p9",
+    "name": "Wide-Leg Cargo Pants",
+    "sellerId": "d3",
+    "category": "bottoms",
+    "price": 380,
+    "originalPrice": null,
+    "description": "Cotton-twill cargo pants with asymmetric pockets. Drawstring waist, tapered ankle, monochrome hardware. Built for movement and Tokyo street style.",
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1517438476312-10d79c077509?w=800&h=1000&fit=crop&q=80",
+        "alt": "Wide-leg cargo pants"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=800&h=1000&fit=crop&q=80",
+        "alt": "Pocket detail"
+      }
+    ],
+    "colors": [
+      {
+        "name": "Black",
+        "hex": "#0E0E12"
+      },
+      {
+        "name": "Sand",
+        "hex": "#C8B98D"
+      }
+    ],
+    "sizes": [
+      {
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "label": "L",
+        "inStock": true
+      }
+    ],
+    "tags": [
+      "streetwear",
+      "cargo",
+      "cotton"
+    ],
+    "featured": false,
+    "availability": "low-stock",
+    "stockCount": 3,
+    "rating": 4.4,
+    "material": "denim",
+    "shipsFrom": "Tokyo, Japan",
+    "shipsWithin": "7–10 business days",
+    "returns": "21-day returns"
+  },
+  {
+    "id": "p10",
+    "name": "Cashmere Crewneck",
+    "sellerId": "d4",
+    "category": "knitwear",
+    "price": 520,
+    "originalPrice": 620,
+    "description": "Pure Mongolian cashmere crewneck. Relaxed fit, ribbed trims, and a buttery hand-feel you'll live in. GOTS-certified, ethically sourced.",
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=800&h=1000&fit=crop&q=80",
+        "alt": "Cashmere crewneck"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800&h=1000&fit=crop&q=80",
+        "alt": "Cashmere texture"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&h=1000&fit=crop&q=80",
+        "alt": "Worn layer"
+      }
+    ],
+    "colors": [
+      {
+        "name": "Oatmeal",
+        "hex": "#E8E4D8"
+      },
+      {
+        "name": "Storm Grey",
+        "hex": "#7A7A7F"
+      },
+      {
+        "name": "Camel",
+        "hex": "#B0875A"
+      },
+      {
+        "name": "Black",
+        "hex": "#0E0E12"
+      }
+    ],
+    "sizes": [
+      {
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "tags": [
+      "cashmere",
+      "knit",
+      "soft"
+    ],
+    "featured": true,
+    "availability": "in-stock",
+    "stockCount": 28,
+    "rating": 4.9,
+    "material": "cotton",
+    "shipsFrom": "Los Angeles, USA",
+    "shipsWithin": "2–4 business days",
+    "returns": "Free 30-day returns"
+  },
+  {
+    "id": "p11",
+    "name": "Ankara Wrap Dress",
+    "sellerId": "d4",
+    "category": "dresses",
+    "price": 680,
+    "originalPrice": null,
+    "description": "Vibrant Ankara wax-print wrap dress with a cowl neckline and asymmetric drape. Bold geometric patterns in saturated jewel tones. A statement piece that celebrates heritage textiles.",
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1623609163859-ca93c959b99c?w=800&h=1000&fit=crop&q=80",
+        "alt": "Ankara wrap dress"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=800&h=1000&fit=crop&q=80",
+        "alt": "Print detail"
+      }
+    ],
+    "colors": [
+      {
+        "name": "Sunset",
+        "hex": "#C8472D"
+      },
+      {
+        "name": "Indigo",
+        "hex": "#1F3A68"
+      }
+    ],
+    "sizes": [
+      {
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "tags": [
+      "ankara",
+      "dress",
+      "vibrant"
+    ],
+    "featured": false,
+    "availability": "in-stock",
+    "stockCount": 13,
+    "rating": 4.7,
+    "material": "ankara",
+    "shipsFrom": "Los Angeles, USA",
+    "shipsWithin": "2–4 business days",
+    "returns": "Free 30-day returns"
+  },
+  {
+    "id": "p12",
+    "name": "Wide-Leg Linen Trousers",
+    "sellerId": "d4",
+    "category": "bottoms",
+    "price": 420,
+    "originalPrice": null,
+    "description": "European linen trousers with a paper-bag waist. Pleated front, tie belt, and a breezy wide leg. The perfect summer staple that breathes.",
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=800&h=1000&fit=crop&q=80",
+        "alt": "Wide-leg linen trousers"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1517438476312-10d79c077509?w=800&h=1000&fit=crop&q=80",
+        "alt": "Waist detail"
+      }
+    ],
+    "colors": [
+      {
+        "name": "Natural",
+        "hex": "#C8B98D"
+      },
+      {
+        "name": "White",
+        "hex": "#F5F2EA"
+      },
+      {
+        "name": "Black",
+        "hex": "#0E0E12"
+      }
+    ],
+    "sizes": [
+      {
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "label": "M",
+        "inStock": false
+      },
+      {
+        "label": "L",
+        "inStock": true
+      }
+    ],
+    "tags": [
+      "linen",
+      "casual",
+      "wide-leg"
+    ],
+    "featured": false,
+    "availability": "in-stock",
+    "stockCount": 17,
+    "rating": 4.5,
+    "material": "linen",
+    "shipsFrom": "Los Angeles, USA",
+    "shipsWithin": "2–4 business days",
+    "returns": "Free 30-day returns"
+  },
+  {
+    "id": "p13",
+    "name": "Velvet Smoking Jacket",
+    "sellerId": "d1",
+    "category": "outerwear",
+    "price": 1850,
+    "originalPrice": null,
+    "description": "Deep plum velvet smoking jacket with satin shawl lapels. Self-tie belt, dropped shoulder, and an enveloping opulence. Inspired by 1970s Yves Saint Laurent.",
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=800&h=1000&fit=crop&q=80",
+        "alt": "Velvet smoking jacket"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=800&h=1000&fit=crop&q=80",
+        "alt": "Lapel detail"
+      }
+    ],
+    "colors": [
+      {
+        "name": "Plum",
+        "hex": "#5B2A4A"
+      },
+      {
+        "name": "Bottle Green",
+        "hex": "#1F3A2E"
+      }
+    ],
+    "sizes": [
+      {
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "label": "XL",
+        "inStock": false
+      }
+    ],
+    "tags": [
+      "velvet",
+      "evening",
+      "opulent"
+    ],
+    "featured": false,
+    "availability": "preorder",
+    "stockCount": 0,
+    "rating": 4.8,
+    "material": "velvet",
+    "shipsFrom": "Paris, France",
+    "shipsWithin": "Ships in 3–4 weeks",
+    "returns": "Final sale"
+  },
+  {
+    "id": "p14",
+    "name": "Chiffon Layered Gown",
+    "sellerId": "d2",
+    "category": "dresses",
+    "price": 820,
+    "originalPrice": null,
+    "description": "Floating chiffon gown with multiple sheer layers. Body-skimming underlay, midi length, with a graceful boat neckline. Ethereal and weightless.",
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=800&h=1000&fit=crop&q=80",
+        "alt": "Chiffon layered gown"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1623609163859-ca93c959b99c?w=800&h=1000&fit=crop&q=80",
+        "alt": "Layered detail"
+      }
+    ],
+    "colors": [
+      {
+        "name": "Pale Blush",
+        "hex": "#E5D4E0"
+      },
+      {
+        "name": "Smoke",
+        "hex": "#7A7A7F"
+      }
+    ],
+    "sizes": [
+      {
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "label": "L",
+        "inStock": false
+      }
+    ],
+    "tags": [
+      "chiffon",
+      "gown",
+      "ethereal"
+    ],
+    "featured": false,
+    "availability": "in-stock",
+    "stockCount": 7,
+    "rating": 4.6,
+    "material": "chiffon",
+    "shipsFrom": "Milan, Italy",
+    "shipsWithin": "5–7 business days",
+    "returns": "14-day returns (hygiene)"
+  },
+  {
+    "id": "p15",
+    "name": "Asymmetric Silk Top",
+    "sellerId": "d3",
+    "category": "tops",
+    "price": 320,
+    "originalPrice": null,
+    "description": "Silk charmeuse top with an asymmetric drape. One-shoulder detail, lustrous finish, and a sculpted sleeve. Modern and architectural.",
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1564257577154-75bd1e2db3bc?w=800&h=1000&fit=crop&q=80",
+        "alt": "Asymmetric silk top"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1485231183945-fffde7cc051e?w=800&h=1000&fit=crop&q=80",
+        "alt": "Side detail"
+      }
+    ],
+    "colors": [
+      {
+        "name": "Pearl",
+        "hex": "#E8E4D8"
+      },
+      {
+        "name": "Onyx",
+        "hex": "#0E0E12"
+      }
+    ],
+    "sizes": [
+      {
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "label": "M",
+        "inStock": true
+      }
+    ],
+    "tags": [
+      "asymmetric",
+      "silk",
+      "modern"
+    ],
+    "featured": false,
+    "availability": "low-stock",
+    "stockCount": 5,
+    "rating": 4.4,
+    "material": "silk",
+    "shipsFrom": "Tokyo, Japan",
+    "shipsWithin": "7–10 business days",
+    "returns": "21-day returns"
+  },
+  {
+    "id": "p16",
+    "name": "Denim Trucker Jacket",
+    "sellerId": "d4",
+    "category": "outerwear",
+    "price": 580,
+    "originalPrice": null,
+    "description": "Classic indigo denim trucker jacket with copper rivets and contrast topstitching. Box-shoulder, button-front, broken-in feel from day one. A forever wardrobe staple.",
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800&h=1000&fit=crop&q=80",
+        "alt": "Denim trucker jacket"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=800&h=1000&fit=crop&q=80",
+        "alt": "Worn detail"
+      }
+    ],
+    "colors": [
+      {
+        "name": "Indigo",
+        "hex": "#3B5894"
+      },
+      {
+        "name": "Stonewash",
+        "hex": "#8FA4C2"
+      },
+      {
+        "name": "Black",
+        "hex": "#0E0E12"
+      }
+    ],
+    "sizes": [
+      {
+        "label": "XS",
+        "inStock": true
+      },
+      {
+        "label": "S",
+        "inStock": true
+      },
+      {
+        "label": "M",
+        "inStock": true
+      },
+      {
+        "label": "L",
+        "inStock": true
+      },
+      {
+        "label": "XL",
+        "inStock": true
+      }
+    ],
+    "tags": [
+      "denim",
+      "jacket",
+      "classic"
+    ],
+    "featured": false,
+    "availability": "in-stock",
+    "stockCount": 31,
+    "rating": 4.7,
+    "material": "denim",
+    "shipsFrom": "Los Angeles, USA",
+    "shipsWithin": "2–4 business days",
+    "returns": "Free 30-day returns"
+  }
+]

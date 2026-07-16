@@ -32,8 +32,10 @@ POST /api/auth/login/
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | GET | `/api/products/` | - | List products |
-| GET | `/api/products/{id}/` | - | Get product |
+| GET | `/api/products/{id}/` | - | Get product (detail, includes reviews) |
 | GET | `/api/categories/` | - | List categories |
+| GET | `/api/designers/` | - | List designers (with collection count + avg rating) |
+| GET | `/api/designers/{id}/` | - | Designer detail |
 | GET | `/api/options/` | - | Get materials, colours, sizes |
 | GET | `/api/upload/` | Bearer | Upload image |
 

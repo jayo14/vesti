@@ -9,51 +9,49 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class DesignerSummarySerializer(serializers.ModelSerializer):
-    """Minimal designer info embedded in product payloads."""
-
-    class Meta:
-        model = "accounts.User"
-        fields = ["id", "username", "avatar", "is_designer"]
-
-
 class ProductListSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     designer_name = serializers.CharField(source='designer.username', read_only=True, default='')
-    designer = DesignerSummarySerializer(read_only=True)
+    designer_id = serializers.PrimaryKeyRelatedField(source='designer', read_only=True)
     image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = [
-            'id', 'name', 'price', 'currency', 'category', 'designer', 'designer_name',
-            'images', 'colors', 'sizes', 'tags', 'stock', 'stock_count', 'rating',
+            'id', 'name', 'price', 'currency', 'category', 'designer_id', 'designer_name',
+            'image_url', 'images', 'colors', 'sizes', 'tags', 'stock', 'stock_count', 'rating',
             'featured', 'material', 'fit_type', 'ships_from', 'ships_within', 'returns',
-            'created_at', 'is_published', 'image_url',
+            'created_at', 'is_published',
         ]
 
     def get_image_url(self, obj):
-        return obj.images[0] if obj.images else None
+        first = obj.images[0] if obj.images else None
+        if isinstance(first, dict):
+            return first.get("url")
+        return first
 
 
 class ProductDetailSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     designer_name = serializers.CharField(source='designer.username', read_only=True, default='')
-    designer = DesignerSummarySerializer(read_only=True)
+    designer_id = serializers.PrimaryKeyRelatedField(source='designer', read_only=True)
     reviews = ReviewSerializer(many=True, read_only=True)
     image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = [
-            'id', 'name', 'description', 'price', 'currency', 'category', 'designer',
-            'designer_name', 'images', 'colors', 'sizes', 'tags', 'stock', 'stock_count',
+            'id', 'name', 'description', 'price', 'currency', 'category', 'designer_id',
+            'designer_name', 'image_url', 'images', 'colors', 'sizes', 'tags', 'stock', 'stock_count',
             'rating', 'featured', 'material', 'fit_type', 'ships_from', 'ships_within',
-            'returns', 'reviews', 'created_at', 'updated_at', 'is_published', 'image_url',
+            'returns', 'reviews', 'created_at', 'updated_at', 'is_published',
         ]
 
     def get_image_url(self, obj):
-        return obj.images[0] if obj.images else None
+        first = obj.images[0] if obj.images else None
+        if isinstance(first, dict):
+            return first.get("url")
+        return first
 
 
 class ProductCreateSerializer(serializers.ModelSerializer):

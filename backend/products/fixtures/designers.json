@@ -1,0 +1,70 @@
+[
+  {
+    "id": "d1",
+    "name": "ATELIER NOIR",
+    "tagline": "Quiet luxury, loud presence",
+    "bio": "A Paris-born atelier redefining minimalism through architectural silhouettes and rare materials. Each piece is hand-finished by master tailors in our 8th arrondissement workshop.",
+    "avatar": "https://images.unsplash.com/photo-1488161628813-04466f872be2?w=200&h=200&fit=crop&q=80",
+    "coverImage": "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=1200&h=600&fit=crop&q=80",
+    "location": "Paris, France",
+    "specialties": [
+      "Tailoring",
+      "Outerwear",
+      "Knitwear"
+    ],
+    "collectionCount": 24,
+    "rating": 4.9,
+    "verified": true
+  },
+  {
+    "id": "d2",
+    "name": "MAISON LUMIÈRE",
+    "tagline": "Light, draped in silk",
+    "bio": "Italian craftsmanship meets modern femininity. Our silk mill in Como has produced fabrics for couture houses since 1923 — now we craft our own collections from those same threads.",
+    "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&h=200&fit=crop&q=80",
+    "coverImage": "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1200&h=600&fit=crop&q=80",
+    "location": "Milan, Italy",
+    "specialties": [
+      "Silk",
+      "Dresses",
+      "Eveningwear"
+    ],
+    "collectionCount": 18,
+    "rating": 4.8,
+    "verified": true
+  },
+  {
+    "id": "d3",
+    "name": "KAZE STUDIO",
+    "tagline": "Tokyo street, refined",
+    "bio": "From Shibuya to your wardrobe. KAZE fuses Japanese textile innovation with streetwear sensibility — technical fabrics, asymmetric cuts, and a monochrome palette.",
+    "avatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&h=200&fit=crop&q=80",
+    "coverImage": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1200&h=600&fit=crop&q=80",
+    "location": "Tokyo, Japan",
+    "specialties": [
+      "Streetwear",
+      "Technical",
+      "Layering"
+    ],
+    "collectionCount": 32,
+    "rating": 4.7,
+    "verified": true
+  },
+  {
+    "id": "d4",
+    "name": "SOLENNE",
+    "tagline": "California ease, elevated",
+    "bio": "Los Angeles-based Solenne makes the kind of pieces you live in — cashmere knits, draped trousers, and effortless dresses. Sustainability woven into every seam.",
+    "avatar": "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?w=200&h=200&fit=crop&q=80",
+    "coverImage": "https://images.unsplash.com/photo-1492707892479-7bc8d5a4ee93?w=1200&h=600&fit=crop&q=80",
+    "location": "Los Angeles, USA",
+    "specialties": [
+      "Knitwear",
+      "Sustainable",
+      "Casual"
+    ],
+    "collectionCount": 21,
+    "rating": 4.85,
+    "verified": true
+  }
+]
