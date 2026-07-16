@@ -9,7 +9,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { GARMENTS, DESIGNERS } from "@/lib/data";
+import { useProducts } from "@/lib/api/products";
+import { productToGarment } from "@/lib/api/mapping";
+import { useDesigners } from "@/lib/api/designers";
 import { useStudioStore } from "@/lib/store";
 import type { Garment } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -54,21 +56,26 @@ export function GarmentSelector({ open, onOpenChange }: GarmentSelectorProps) {
     setView,
   } = useStudioStore();
 
-  const filteredGarments = GARMENTS.filter((g) => {
-    if (category !== "all" && g.category !== category) return false;
-    if (designerFilter !== "all" && g.designerId !== designerFilter) return false;
-    if (search) {
-      const q = search.toLowerCase();
-      if (
-        !g.name.toLowerCase().includes(q) &&
-        !g.designer.toLowerCase().includes(q) &&
-        !g.tags.some((t) => t.includes(q))
-      ) {
-        return false;
+  const { data: products = [], isLoading } = useProducts();
+  const { data: designers = [] } = useDesigners();
+
+  const filteredGarments: Garment[] = products
+    .map(productToGarment)
+    .filter((g) => {
+      if (category !== "all" && g.category !== category) return false;
+      if (designerFilter !== "all" && g.designerId !== designerFilter) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        if (
+          !g.name.toLowerCase().includes(q) &&
+          !g.designer.toLowerCase().includes(q) &&
+          !g.tags.some((t) => t.includes(q))
+        ) {
+          return false;
+        }
       }
-    }
-    return true;
-  });
+      return true;
+    });
 
   const handleSelectGarment = (g: Garment) => {
     setSelectedGarment(g);
@@ -182,7 +189,12 @@ export function GarmentSelector({ open, onOpenChange }: GarmentSelectorProps) {
 
                 {/* Grid */}
                 <div className="flex-1 overflow-y-auto p-6">
-                  {filteredGarments.length === 0 ? (
+                  {isLoading ? (
+                    <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground">
+                      <Shirt className="w-10 h-10 mb-3 opacity-40" />
+                      <p className="text-sm">Loading garments…</p>
+                    </div>
+                  ) : filteredGarments.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground">
                       <Shirt className="w-10 h-10 mb-3 opacity-40" />
                       <p className="text-sm">No garments match your filters.</p>
@@ -284,8 +296,8 @@ export function GarmentSelector({ open, onOpenChange }: GarmentSelectorProps) {
                 transition={{ duration: 0.2 }}
                 className="h-full overflow-y-auto p-6"
               >
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {DESIGNERS.map((d, i) => (
+                  <div className="grid sm:grid-cols-2 gap-4">
+                  {designers.map((d, i) => (
                     <motion.button
                       key={d.id}
                       initial={{ opacity: 0, y: 10 }}
