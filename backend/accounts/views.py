@@ -15,8 +15,44 @@ from .serializers import (
     PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer,
 )
-from .models import User
+from .models import User, DesignerApplication
 from .permissions import IsDesigner
+
+
+def _notify_applicant(application, *, approved: bool):
+    """Best-effort notification when an application is reviewed.
+
+    Emails the applicant via ``send_mail`` when a real EMAIL_HOST is configured;
+    otherwise silently no-ops so local dev doesn't spew errors. The admin UI
+    surfaces the decision regardless, so this is purely a courtesy notification.
+    """
+    to = getattr(application.user, 'email', '') or ''
+    if not to:
+        return
+    if not settings.EMAIL_HOST or settings.EMAIL_HOST in ('localhost',):
+        return
+    subject = (
+        "Your VESTI designer application was approved"
+        if approved
+        else "Update on your VESTI designer application"
+    )
+    body = (
+        f"Hi {application.user.username},\n\n"
+        f"Your designer application for '{application.brand_name}' was approved. "
+        f"You can now list products in the marketplace."
+        if approved
+        else
+        f"Hi {application.user.username},\n\n"
+        f"We reviewed your designer application for '{application.brand_name}' "
+        f"and are unable to approve it at this time.\n\n"
+        f"Reason: {application.rejection_reason or 'Not specified.'}\n"
+    )
+    try:
+        send_mail(
+            subject, body, settings.DEFAULT_FROM_EMAIL, [to], fail_silently=True,
+        )
+    except Exception:
+        pass
 
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
@@ -98,9 +134,10 @@ class DesignersListView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
 
 class UsersListView(generics.ListAPIView):
-    queryset = User.objects.all()
+    """Admin-only user list. Powers the Users tab in the admin panel."""
+    queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserListSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAdminUser]
 
 
 @api_view(['GET', 'PATCH'])
@@ -175,10 +212,41 @@ def apply_designer(request):
     return Response({'detail': 'Application submitted. Awaiting review.', 'status': 'pending'})
 
 
+class AdminDesignerApplicationListView(APIView):
+    """List designer applications (defaults to pending), latest first."""
+    permission_classes = [permissions.IsAdminUser]
+
+    def get(self, request):
+        status_filter = request.query_params.get('status', 'pending')
+        qs = DesignerApplication.objects.select_related('user', 'reviewed_by').all()
+        if status_filter != 'all':
+            qs = qs.filter(status=status_filter)
+        return Response([
+            {
+                'id': a.id,
+                'brand_name': a.brand_name,
+                'bio': a.bio,
+                'portfolio_links': a.portfolio_links,
+                'status': a.status,
+                'rejection_reason': a.rejection_reason,
+                'created_at': a.created_at,
+                'updated_at': a.updated_at,
+                'user': {
+                    'id': a.user.id,
+                    'username': a.user.username,
+                    'email': a.user.email,
+                    'avatar': a.user.avatar,
+                    'is_designer': a.user.is_designer,
+                },
+                'reviewed_by': a.reviewed_by.username if a.reviewed_by else None,
+            }
+            for a in qs
+        ])
+
+
 @api_view(['POST'])
 @permission_classes([permissions.IsAdminUser])
 def review_designer_application(request, application_id):
-    from .models import DesignerApplication
     try:
         app = DesignerApplication.objects.get(id=application_id, status='pending')
     except DesignerApplication.DoesNotExist:
@@ -191,12 +259,20 @@ def review_designer_application(request, application_id):
         app.user.save()
         app.reviewed_by = request.user
         app.save()
+        _notify_applicant(app, approved=True)
         return Response({'detail': 'Designer application approved.', 'status': 'approved'})
     elif action == 'reject':
+        reason = request.data.get('rejection_reason', '').strip()
+        if not reason:
+            return Response(
+                {'detail': 'A rejection reason is required.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         app.status = 'rejected'
-        app.rejection_reason = request.data.get('rejection_reason', '')
+        app.rejection_reason = reason
         app.reviewed_by = request.user
         app.save()
+        _notify_applicant(app, approved=False)
         return Response({'detail': 'Designer application rejected.', 'status': 'rejected'})
     return Response({'detail': 'Invalid action. Use "approve" or "reject".'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -208,7 +284,6 @@ class DesignerDashboardView(APIView):
         from products.models import Product
         from orders.models import Order
         from payments.models import DesignerEarning
-        import json
 
         products = Product.objects.filter(designer=request.user)
         earnings = DesignerEarning.objects.filter(designer=request.user, status='available')
@@ -223,36 +298,63 @@ class DesignerDashboardView(APIView):
                     designer_orders.append(o)
                     break
 
-        # Try-on metrics per product
+        # Per-product try-on and purchase counts within the funnel window (14 days).
+        # A designer needs to know: how many people tried this on, and of those,
+        # how many actually bought (any variant). High try-ons + zero purchases is
+        # the actionable signal — likely a photo, description, or price issue.
         from studio.models import Generation
         from django.utils import timezone
         from datetime import timedelta
 
+        FUNNEL_WINDOW_DAYS = 14
+        window_start = timezone.now() - timedelta(days=FUNNEL_WINDOW_DAYS)
+
         product_ids = [p.id for p in products]
-        tryon_data = {}
+        tryon_data = {pid: {"total": 0, "window": 0} for pid in product_ids}
         for pid in product_ids:
             gens = Generation.objects.filter(product_id=pid)
-            total = gens.count()
-            recent_cutoff = timezone.now() - timedelta(days=30)
-            recent = gens.filter(created_at__gte=recent_cutoff).count()
-            tryon_data[pid] = {"total_tryons": total, "recent_tryons": recent}
+            tryon_data[pid]["total"] = gens.count()
+            tryon_data[pid]["window"] = gens.filter(created_at__gte=window_start).count()
+
+        purchase_counts = {pid: 0 for pid in product_ids}
+        purchase_counts_window = {pid: 0 for pid in product_ids}
+        paid_orders = Order.objects.filter(status__in=('paid', 'shipped', 'delivered'))
+        for o in paid_orders:
+            for item in (o.items or []):
+                if not isinstance(item, dict) or item.get('sellerId') != uid:
+                    continue
+                pid_raw = item.get('productId') or item.get('product_id') or item.get('id')
+                try:
+                    pid = int(pid_raw)
+                except (TypeError, ValueError):
+                    continue
+                if pid not in purchase_counts:
+                    continue
+                qty = int(item.get('quantity', 1) or 1)
+                purchase_counts[pid] += qty
+                if o.created_at >= window_start:
+                    purchase_counts_window[pid] += qty
 
         return Response({
             'products_count': products.count(),
             'orders_count': len(designer_orders),
             'available_balance': str(total_available),
+            'funnel_window_days': FUNNEL_WINDOW_DAYS,
             'products': [
                 {
                     'id': p.id, 'name': p.name, 'price': str(p.price), 'stock': p.stock,
                     'image_url': p.images[0] if p.images else None,
+                    'images': p.images,
                     'is_published': p.is_published,
                     'moderation_status': p.moderation_status,
                     'rejection_reason': p.rejection_reason,
                     'material': p.material,
                     'fit_type': p.fit_type,
                     'category_id': p.category_id, 'description': p.description,
-                    'tryons_total': tryon_data.get(p.id, {}).get('total_tryons', 0),
-                    'tryons_recent': tryon_data.get(p.id, {}).get('recent_tryons', 0),
+                    'tryons_total': tryon_data[p.id]["total"],
+                    'tryons_window': tryon_data[p.id]["window"],
+                    'purchases_total': purchase_counts[p.id],
+                    'purchases_window': purchase_counts_window[p.id],
                 }
                 for p in products
             ],
