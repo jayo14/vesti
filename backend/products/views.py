@@ -56,6 +56,24 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CategorySerializer
     permission_classes = [permissions.AllowAny]
 
+class MyProductsView(APIView):
+    permission_classes = [permissions.IsAuthenticated, IsDesigner]
+
+    def get(self, request):
+        products = Product.objects.filter(designer=request.user)
+        return Response([
+            {
+                'id': p.id,
+                'name': p.name,
+                'price': str(p.price),
+                'stock': p.stock,
+                'category': p.category.name if p.category else None,
+                'created_at': p.created_at,
+            }
+            for p in products
+        ])
+
+
 class OptionsView(APIView):
     permission_classes = [permissions.AllowAny]
 
