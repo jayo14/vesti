@@ -125,7 +125,7 @@ function ProductDetailContent({
     <div className="flex-1 overflow-y-auto">
       {/* Breadcrumb */}
       <div className="flex items-center gap-1 px-4 sm:px-6 lg:px-8 pt-4 text-[11px] text-muted-foreground">
-        <button onClick={() => setView("marketplace")} className="hover:text-foreground">Marketplace</button>
+        <button onClick={() => router.push("/marketplace")} className="hover:text-foreground">Marketplace</button>
         <ChevronRight className="w-3 h-3" />
         <span className="capitalize">{product.category}</span>
         <ChevronRight className="w-3 h-3" />

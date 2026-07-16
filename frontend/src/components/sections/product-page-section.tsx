@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { Product } from "@/lib/types";
+import { useStudioStore } from "@/lib/store";
 import { useProductActions } from "@/lib/use-product-actions";
 import { getMaterial } from "@/lib/materials";
 import { useProduct, useProducts } from "@/lib/api/products";
