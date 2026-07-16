@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { QueryProvider } from "@/lib/query-provider";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -47,8 +48,10 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${playfair.variable} font-sans antialiased bg-background text-foreground`}
       >
-        {children}
-        <Toaster position="bottom-right" richColors closeButton />
+        <QueryProvider>
+          {children}
+          <Toaster position="bottom-right" richColors closeButton />
+        </QueryProvider>
       </body>
     </html>
   );

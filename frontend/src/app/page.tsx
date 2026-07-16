@@ -16,7 +16,6 @@ import { EarningsSection } from "@/components/sections/earnings-section";
 import { AdminSection } from "@/components/sections/admin-section";
 import { DesignerDashboardSection } from "@/components/sections/designer-dashboard-section";
 import { ProductPageSection } from "@/components/sections/product-page-section";
-import { getProductById } from "@/lib/products";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -34,7 +33,7 @@ export default function Home() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const pid = params.get("product");
-    if (pid && getProductById(pid)) openProductPage(pid);
+    if (pid) openProductPage(pid);
   }, [openProductPage]);
 
   useEffect(() => {
@@ -66,10 +65,11 @@ export default function Home() {
             {view === "admin" && <AdminSection />}
             {view === "designer-dashboard" && <DesignerDashboardSection />}
             {view === "product" &&
-              (() => {
-                const p = selectedProductId ? getProductById(selectedProductId) : undefined;
-                return p ? <ProductPageSection product={p} /> : <MarketplaceSection />;
-              })()}
+              (selectedProductId ? (
+                <ProductPageSection productId={selectedProductId} />
+              ) : (
+                <MarketplaceSection />
+              ))}
           </motion.div>
         </AnimatePresence>
       </main>
