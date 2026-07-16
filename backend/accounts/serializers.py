@@ -1,6 +1,6 @@
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
-from .models import User, DesignerApplication
+from .models import User, DesignerApplication, BodyProfile
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -62,3 +62,18 @@ class DesignerApplicationSerializer(serializers.ModelSerializer):
         fields = ['id', 'brand_name', 'bio', 'portfolio_links', 'status', 'rejection_reason',
                   'created_at', 'updated_at']
         read_only_fields = ['id', 'status', 'rejection_reason', 'created_at', 'updated_at']
+
+
+class BodyProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BodyProfile
+        fields = [
+            'height_cm', 'weight_kg', 'body_shape', 'measurements',
+            'reference_image', 'created_at', 'updated_at',
+        ]
+        read_only_fields = ['created_at', 'updated_at']
+
+
+class BodyProfileMeasureSerializer(serializers.Serializer):
+    person_image = serializers.CharField()
+    height_cm = serializers.DecimalField(max_digits=5, decimal_places=1)

@@ -14,8 +14,10 @@ from .serializers import (
     UserListSerializer,
     PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer,
+    BodyProfileSerializer,
+    BodyProfileMeasureSerializer,
 )
-from .models import User, DesignerApplication
+from .models import User, DesignerApplication, BodyProfile
 from .permissions import IsDesigner
 
 
@@ -275,6 +277,72 @@ def review_designer_application(request, application_id):
         _notify_applicant(app, approved=False)
         return Response({'detail': 'Designer application rejected.', 'status': 'rejected'})
     return Response({'detail': 'Invalid action. Use "approve" or "reject".'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class BodyProfileRetrieveUpdateView(APIView):
+    """GET/PUT the authenticated user's body profile."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        try:
+            profile = BodyProfile.objects.get(user=request.user)
+        except BodyProfile.DoesNotExist:
+            return Response({"detail": "No body profile found."}, status=status.HTTP_404_NOT_FOUND)
+        return Response(BodyProfileSerializer(profile).data)
+
+    def put(self, request):
+        profile, _ = BodyProfile.objects.get_or_create(user=request.user)
+        serializer = BodyProfileSerializer(profile, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+
+class BodyProfileMeasureView(APIView):
+    """Run the measurement pipeline on a photo and return derived measurements.
+
+    POST body: ``{"person_image": "<data-url>", "height_cm": 170.0}``.
+
+    Returns the measurement dict and inferred body shape so the user can
+    review/adjust before saving.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = BodyProfileMeasureSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        person_image = serializer.validated_data["person_image"]
+        height_cm = float(serializer.validated_data["height_cm"])
+
+        try:
+            from ai.vision_client import (
+                pose as run_pose,
+                parse as run_parse,
+                measurements as run_measurements,
+                VisionEngineError,
+            )
+            pose_resp = run_pose(person_image)
+            parse_resp = run_parse(person_image)
+            measurements_resp = run_measurements(
+                pose_resp.get("landmarks", []),
+                height_cm,
+                parse_resp.get("mask_base64") or parse_resp.get("mask_image_url"),
+            )
+        except VisionEngineError as exc:
+            return Response(
+                {"success": False, "error": exc.message, "hint": exc.hint, "code": exc.code},
+                status=exc.status,
+            )
+
+        return Response({
+            "success": True,
+            "measurements": measurements_resp.get("measurements", measurements_resp),
+            "body_shape": measurements_resp.get("body_shape", ""),
+            "hint": (
+                "Review the measurements below. You can adjust any value "
+                "before saving to your profile."
+            ),
+        })
 
 
 class DesignerDashboardView(APIView):
