@@ -23,6 +23,9 @@ export function DesignerDashboardSection() {
   const [deleting, setDeleting] = useState<number | null>(null);
   const [categories, setCategories] = useState<any[]>([]);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
   const [newProduct, setNewProduct] = useState({ name: "", description: "", price: "", stock: "1", category: "", image_url: "", is_published: false });
   const descRef = useRef<HTMLTextAreaElement>(null);
 
@@ -60,6 +63,34 @@ export function DesignerDashboardSection() {
     return Object.keys(e).length === 0;
   };
 
+  const uploadImage = async (file: File) => {
+    if (!token) return;
+    setUploading(true);
+    setUploadError("");
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const r = await fetch(`${API_BASE}/api/upload/`, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: fd });
+      if (r.ok) {
+        const d = await r.json();
+        setNewProduct({ ...newProduct, image_url: d.url });
+      } else {
+        const d = await r.json().catch(() => ({}));
+        setUploadError(d.error || "Upload failed");
+      }
+    } catch {
+      setUploadError("Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const onFilePick = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) uploadImage(file);
+    e.target.value = "";
+  };
+
   const deleteProduct = async (id: number) => {
     if (!token) return;
     if (!window.confirm("Delete this product permanently?")) return;
@@ -79,6 +110,7 @@ export function DesignerDashboardSection() {
   const startEdit = (p: any) => {
     setEditingProduct(p);
     setNewProduct({ name: p.name, description: p.description || "", price: p.price.toString(), stock: p.stock.toString(), category: p.category_id?.toString() || "", image_url: p.image_url || "", is_published: p.is_published });
+    setUploadError("");
     setShowForm(true);
   };
 
@@ -152,13 +184,13 @@ export function DesignerDashboardSection() {
 
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-serif text-lg">My Products</h3>
-              <button onClick={() => { setShowForm(true); setEditingProduct(null); setNewProduct({ name: "", description: "", price: "", stock: "1", category: "", image_url: "", is_published: false }); setFormErrors({}); }}
+              <button                 onClick={() => { setShowForm(true); setEditingProduct(null); setNewProduct({ name: "", description: "", price: "", stock: "1", category: "", image_url: "", is_published: false }); setFormErrors({}); setUploadError(""); }}
                 className="px-4 py-2 rounded-full bg-foreground text-background text-xs font-medium inline-flex items-center gap-1.5">
                 <Plus className="w-3.5 h-3.5" /> Add product
               </button>
             </div>
 
-            <Dialog open={showForm} onOpenChange={(o) => { if (!o) { setShowForm(false); setEditingProduct(null); setFormErrors({}); } }}>
+              <Dialog open={showForm} onOpenChange={(o) => { if (!o) { setShowForm(false); setEditingProduct(null); setFormErrors({}); setUploadError(""); } }}>
               <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="font-serif text-lg">{editingProduct ? "Edit product" : "Add product"}</DialogTitle>
@@ -201,19 +233,24 @@ export function DesignerDashboardSection() {
                     </FieldBlock>
                   </div>
 
-                  <FieldBlock label="Image URL">
+                  <FieldBlock label="Product image" error={formErrors.image_url || uploadError}>
                     <div className="space-y-2">
-                      <input value={newProduct.image_url} onChange={(e) => setNewProduct({ ...newProduct, image_url: e.target.value })}
-                        placeholder="https://example.com/image.jpg" className="w-full px-3 py-2 text-sm rounded-xl border bg-background" />
-                      {newProduct.image_url && (
-                        <div className="relative w-full h-32 rounded-xl overflow-hidden bg-muted">
+                      <input ref={fileRef} type="file" accept="image/*" onChange={onFilePick} className="hidden" />
+                      {newProduct.image_url ? (
+                        <div className="relative w-full h-40 rounded-xl overflow-hidden bg-muted">
                           <img src={newProduct.image_url} alt="Preview" className="w-full h-full object-cover"
-                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; (e.target as HTMLImageElement).nextElementSibling?.classList.remove("hidden"); }}
-                            onLoad={(e) => { (e.target as HTMLImageElement).style.display = "block"; (e.target as HTMLImageElement).nextElementSibling?.classList.add("hidden"); }} />
-                          <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground bg-muted hidden">
-                            <Image className="w-5 h-5 mr-1" /> Preview failed
-                          </div>
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                          <button type="button" onClick={() => { setNewProduct({ ...newProduct, image_url: "" }); setUploadError(""); }}
+                            className="absolute top-2 right-2 p-1.5 rounded-full bg-background/80 backdrop-blur hover:bg-background transition-colors">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
+                      ) : (
+                        <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
+                          className="w-full h-40 rounded-xl border-2 border-dashed border-border hover:border-foreground/40 transition-colors flex flex-col items-center justify-center gap-2 text-muted-foreground disabled:opacity-60">
+                          {uploading ? <Loader2 className="w-6 h-6 animate-spin" /> : <Image className="w-6 h-6" />}
+                          <span className="text-xs">{uploading ? "Uploading..." : "Click to upload an image"}</span>
+                        </button>
                       )}
                     </div>
                   </FieldBlock>
@@ -228,7 +265,7 @@ export function DesignerDashboardSection() {
                   </label>
 
                   <div className="flex gap-2 pt-2">
-                    <button onClick={() => { setShowForm(false); setEditingProduct(null); setFormErrors({}); }}
+                    <button onClick={() => { setShowForm(false); setEditingProduct(null); setFormErrors({}); setUploadError(""); }}
                       className="flex-1 py-2.5 rounded-full border border-border text-sm font-medium hover:bg-foreground/5 transition-colors">
                       Cancel
                     </button>
