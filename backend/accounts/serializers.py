@@ -53,7 +53,7 @@ class DesignerSerializer(serializers.ModelSerializer):
 class UserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'bio', 'avatar', 'is_designer', 'date_joined', 'phone']
+        fields = ['id', 'username', 'email', 'bio', 'avatar', 'is_designer', 'is_staff', 'is_active', 'date_joined', 'phone']
 
 
 class DesignerApplicationSerializer(serializers.ModelSerializer):
