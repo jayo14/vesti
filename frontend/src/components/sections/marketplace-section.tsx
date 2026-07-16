@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useStudioStore } from "@/lib/store";
 import { useShoppingStore } from "@/lib/shopping-store";
-import { PRODUCTS } from "@/lib/products";
+import { useProducts } from "@/lib/api/products";
 import type { Product } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { ProductCard } from "@/components/shopping/product-card";
@@ -56,19 +56,23 @@ export function MarketplaceSection() {
   const showSmartResults =
     smartSearchActive && (smartSearchResult || smartSearchResult === null);
 
+  const { data: products = [], isLoading, isError } = useProducts({
+    search: searchQuery || undefined,
+    category: categoryFilter,
+    sort,
+  });
+
   const filtered = useMemo(() => {
-    let list = PRODUCTS.filter((p) => {
-      if (categoryFilter !== "all" && p.category !== categoryFilter) return false;
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase();
-        return (
+    let list = products;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(
+        (p) =>
           p.name.toLowerCase().includes(q) ||
           p.sellerName.toLowerCase().includes(q) ||
           p.tags.some((t) => t.includes(q))
-        );
-      }
-      return true;
-    });
+      );
+    }
     switch (sort) {
       case "price-low":
         list = [...list].sort((a, b) => a.price - b.price);
@@ -80,7 +84,7 @@ export function MarketplaceSection() {
         list = [...list].sort((a, b) => b.rating - a.rating);
         break;
       case "newest":
-        list = [...list].reverse();
+        // Backend returns newest-first by default; keep as-is.
         break;
       case "featured":
       default:
@@ -89,7 +93,7 @@ export function MarketplaceSection() {
         );
     }
     return list;
-  }, [categoryFilter, searchQuery, sort]);
+  }, [products, searchQuery, sort]);
 
   const handleTryOn = (p: Product) => {
     setSelectedGarment({
@@ -241,7 +245,15 @@ export function MarketplaceSection() {
             </div>
 
             {/* Grid */}
-            {filtered.length === 0 ? (
+            {isLoading ? (
+              <div className="py-20 text-center text-muted-foreground">
+                <p>Loading products…</p>
+              </div>
+            ) : isError ? (
+              <div className="py-20 text-center text-muted-foreground">
+                <p>Couldn’t load products. Please try again.</p>
+              </div>
+            ) : filtered.length === 0 ? (
               <div className="py-20 text-center text-muted-foreground">
                 <p>No products match your search. Try a different filter.</p>
               </div>

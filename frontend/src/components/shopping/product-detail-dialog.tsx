@@ -26,7 +26,7 @@ import type { Product } from "@/lib/types";
 import { useStudioStore } from "@/lib/store";
 import { useProductActions } from "@/lib/use-product-actions";
 import { getMaterial } from "@/lib/materials";
-import { getRelatedProducts } from "@/lib/products";
+import { useProducts } from "@/lib/api/products";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { StarRating } from "./star-rating";
@@ -78,6 +78,7 @@ function ProductDetailContent({
 }) {
   const { setView } = useStudioStore();
   const { checkoutItem, addToCartItem, buyNow, tryOn } = useProductActions();
+  const { data: allProducts = [] } = useProducts();
 
   const [activeImage, setActiveImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string>(
@@ -104,7 +105,13 @@ function ProductDetailContent({
     }
   };
 
-  const relatedProducts = getRelatedProducts(product.id, 4);
+  const relatedProducts = allProducts
+    .filter(
+      (p) =>
+        p.id !== product.id &&
+        (p.category === product.category || p.sellerId === product.sellerId)
+    )
+    .slice(0, 4);
   const isSoldOut = product.availability === "sold-out";
   const selectedSizeObj = product.sizes.find((s) => s.label === selectedSize);
   const tabs: { id: Tab; label: string; count?: number }[] = [

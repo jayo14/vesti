@@ -22,7 +22,7 @@ import type { Product } from "@/lib/types";
 import { useStudioStore } from "@/lib/store";
 import { useProductActions } from "@/lib/use-product-actions";
 import { getMaterial } from "@/lib/materials";
-import { getRelatedProducts } from "@/lib/products";
+import { useProduct, useProducts } from "@/lib/api/products";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { StarRating } from "@/components/shopping/star-rating";
@@ -36,9 +36,11 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 
 type Tab = "description" | "styling" | "reviews" | "shipping";
 
-export function ProductPageSection({ product }: { product: Product }) {
+export function ProductPageSection({ productId }: { productId: string }) {
   const { setView } = useStudioStore();
   const { checkoutItem, addToCartItem, buyNow, tryOn } = useProductActions();
+  const { data: product, isLoading } = useProduct(productId);
+  const { data: allProducts = [] } = useProducts();
 
   const [activeImage, setActiveImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string>(
@@ -65,14 +67,32 @@ export function ProductPageSection({ product }: { product: Product }) {
     }
   };
 
-  const relatedProducts = getRelatedProducts(product.id, 4);
-  const isSoldOut = product.availability === "sold-out";
+  const relatedProducts = product
+    ? allProducts
+        .filter(
+          (p) =>
+            p.id !== product.id &&
+            (p.category === product.category || p.sellerId === product.sellerId)
+        )
+        .slice(0, 4)
+    : [];
+  const isSoldOut = product ? product.availability === "sold-out" : false;
   const tabs: { id: Tab; label: string; count?: number }[] = [
     { id: "description", label: "Details" },
     { id: "styling", label: "AI Styling" },
-    { id: "reviews", label: "Reviews", count: product.reviews.length },
+    { id: "reviews", label: "Reviews", count: product?.reviews.length || 0 },
     { id: "shipping", label: "Shipping" },
   ];
+
+  if (!product) {
+    return (
+      <section className="relative min-h-screen pt-24 pb-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center text-muted-foreground py-20">
+          {isLoading ? "Loading product…" : "Product not found."}
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="relative min-h-screen pt-24 pb-20">
