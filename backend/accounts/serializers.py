@@ -7,7 +7,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'bio', 'avatar']
+        fields = ['id', 'username', 'email', 'password', 'bio', 'avatar', 'phone']
 
     def create(self, validated_data):
         user = User.objects.create_user(
@@ -16,13 +16,16 @@ class RegisterSerializer(serializers.ModelSerializer):
             password=validated_data['password'],
             bio=validated_data.get('bio', ''),
             avatar=validated_data.get('avatar', ''),
+            phone=validated_data.get('phone', ''),
         )
         return user
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'bio', 'avatar', 'is_designer', 'date_joined']
+        fields = ['id', 'username', 'email', 'bio', 'avatar', 'is_designer',
+                  'date_joined', 'phone', 'bank_name', 'bank_account_number',
+                  'bank_account_name']
         read_only_fields = ['id', 'date_joined']
 
 class PasswordResetRequestSerializer(serializers.Serializer):
@@ -40,9 +43,9 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 class DesignerSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'bio', 'avatar', 'date_joined']
+        fields = ['id', 'username', 'bio', 'avatar', 'date_joined', 'phone']
 
 class UserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'bio', 'avatar', 'is_designer', 'date_joined']
+        fields = ['id', 'username', 'bio', 'avatar', 'is_designer', 'date_joined', 'phone']

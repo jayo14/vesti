@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     'orders',
     'studio',
     'ai',
+    'payments',
 ]
 
 MIDDLEWARE = [
@@ -131,3 +132,10 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+# ALATPay Configuration
+ALATPAY_PUBLIC_KEY = os.environ.get('ALATPAY_PUBLIC_KEY', '')
+ALATPAY_SECRET_KEY = os.environ.get('ALATPAY_SECRET_KEY', '')
+ALATPAY_BUSINESS_ID = os.environ.get('ALATPAY_BUSINESS_ID', '')
+ALATPAY_WEBHOOK_SECRET = os.environ.get('ALATPAY_WEBHOOK_SECRET', '')
+ALATPAY_SPLIT_CODE = os.environ.get('ALATPAY_SPLIT_CODE', '')
