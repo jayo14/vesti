@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, Eye, EyeOff } from "lucide-react";
 import { useAuthStore } from "@/lib/auth-store";
 import { toast } from "sonner";
 
@@ -13,6 +13,7 @@ export function AuthModal({ open, onOpenChange }: { open: boolean; onOpenChange:
   const { setToken, setUser } = useAuthStore();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ username: "", email: "", password: "" });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,8 +68,14 @@ export function AuthModal({ open, onOpenChange }: { open: boolean; onOpenChange:
             <input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
               placeholder="Email" className="w-full px-3 py-2 text-sm rounded-xl border bg-background" />
           )}
-          <input required type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })}
-            placeholder="Password" className="w-full px-3 py-2 text-sm rounded-xl border bg-background" />
+          <div className="relative">
+            <input required type={showPassword ? "text" : "password"} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })}
+              placeholder="Password" className="w-full px-3 py-2 text-sm rounded-xl border bg-background pr-10" />
+            <button type="button" onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
           <button disabled={loading}
             className="w-full py-2.5 rounded-full bg-foreground text-background text-sm font-medium disabled:opacity-50 inline-flex items-center justify-center gap-2">
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
