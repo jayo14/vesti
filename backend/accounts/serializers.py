@@ -4,20 +4,25 @@ from .models import User
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
+    full_name = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'bio', 'avatar', 'phone']
+        fields = ['id', 'full_name', 'email', 'password', 'bio', 'avatar', 'phone']
 
     def create(self, validated_data):
+        full_name = validated_data.pop('full_name', '')
+        username = validated_data.get('email', '').split('@')[0] or f"user_{User.objects.count() + 1}"
         user = User.objects.create_user(
-            username=validated_data['username'],
+            username=username,
             email=validated_data.get('email', ''),
             password=validated_data['password'],
             bio=validated_data.get('bio', ''),
             avatar=validated_data.get('avatar', ''),
             phone=validated_data.get('phone', ''),
         )
+        user.first_name = full_name
+        user.save(update_fields=['first_name'])
         return user
 
 class UserSerializer(serializers.ModelSerializer):

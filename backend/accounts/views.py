@@ -18,6 +18,22 @@ from .serializers import (
 from .models import User
 from .permissions import IsDesigner
 
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def email_login(request):
+    email = request.data.get('email', '')
+    password = request.data.get('password', '')
+    try:
+        user = User.objects.get(email__iexact=email)
+    except User.DoesNotExist:
+        return Response({'detail': 'No active account found with the given credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+    if not user.check_password(password):
+        return Response({'detail': 'No active account found with the given credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+    from rest_framework_simplejwt.tokens import RefreshToken
+    refresh = RefreshToken.for_user(user)
+    return Response({'access': str(refresh.access_token), 'refresh': str(refresh)})
+
+
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
