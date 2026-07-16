@@ -321,6 +321,29 @@ export interface PaymentStatusResponse {
   };
 }
 
+// ===========================================================================
+// Body Profile — persistent user measurements
+// ===========================================================================
+
+export interface BodyProfile {
+  height_cm: number;
+  weight_kg: number | null;
+  body_shape: string;
+  measurements: Record<string, number>;
+  reference_image: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BodyProfileMeasureResponse {
+  success: boolean;
+  measurements: Record<string, number>;
+  body_shape: string;
+  hint?: string;
+  error?: string;
+  code?: string;
+}
+
 export interface TransactionRecord {
   id: number;
   user: number;
