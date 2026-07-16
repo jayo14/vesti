@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useShoppingStore } from "@/lib/shopping-store";
 import { useStudioStore } from "@/lib/store";
-import { getProductById } from "@/lib/products";
+import { useProducts } from "@/lib/api/products";
 import type { SmartSearchFilters, Product } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -41,6 +41,9 @@ export function SmartSearchResults({
     setSmartSearchActive,
   } = useShoppingStore();
   const { setSelectedGarment, setCustomGarmentImage, setGarmentSource, setSelectedMaterial, setView } = useStudioStore();
+
+  const { data: allProducts = [] } = useProducts();
+  const productById = new Map(allProducts.map((p) => [p.id, p]));
 
   if (smartSearchLoading) {
     return (
@@ -163,7 +166,7 @@ export function SmartSearchResults({
       {matches && matches.length > 0 ? (
         <div className="space-y-3">
           {matches.map((match, i) => {
-            const product = getProductById(match.productId);
+            const product = productById.get(match.productId);
             if (!product) return null;
             return (
               <motion.div
