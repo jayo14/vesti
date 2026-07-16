@@ -3,12 +3,14 @@
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles, Camera, Shirt, Wand2 } from "lucide-react";
 import { useStudioStore } from "@/lib/store";
-import { FEATURED_GARMENTS } from "@/lib/data";
+import { useProducts } from "@/lib/api/products";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 export function HeroSection() {
   const setView = useStudioStore((s) => s.setView);
+  const { data: products = [] } = useProducts();
+  const featuredPieces = products.filter((p) => p.featured).slice(0, 3);
 
   return (
     <section className="relative min-h-screen flex flex-col justify-center overflow-hidden pt-24 pb-16">
@@ -164,10 +166,10 @@ export function HeroSection() {
                 className="absolute bottom-4 right-4 glass-strong rounded-full pl-2 pr-4 py-2 flex items-center gap-2 shadow-premium"
               >
                 <div className="flex -space-x-2">
-                  {FEATURED_GARMENTS.slice(0, 3).map((g) => (
+                  {featuredPieces.map((g) => (
                     <img
                       key={g.id}
-                      src={g.image}
+                      src={g.images[0]?.url || g.image}
                       alt={g.name}
                       className="w-7 h-7 rounded-full ring-2 ring-background object-cover"
                     />
