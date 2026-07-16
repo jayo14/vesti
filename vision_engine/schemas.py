@@ -113,6 +113,10 @@ class MeasurementsResponse(BaseModel):
     arm_length_cm: float
     leg_length_cm: float
     confidence: float = Field(..., ge=0.0, le=1.0)
+    estimated: bool = Field(
+        True,
+        description="True for all MVP results: circumferences are geometric estimates, not lab measurements.",
+    )
     model: str = "stub-measurements"
 
 
