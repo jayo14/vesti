@@ -1,1 +1,6 @@
-"""enhancement submodule — scaffolding only. Model logic lands in Stage 1+."""
+"""enhancement submodule — Real-ESRGAN upscale/cleanup (Stage 2.7)."""
+from __future__ import annotations
+
+from .service import enhance
+
+__all__ = ["enhance"]
