@@ -1,6 +1,10 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ProductViewSet, CategoryViewSet, OptionsView, MyProductsView, DesignerListView, DesignerDetailView
+from .views import (
+    ProductViewSet, CategoryViewSet, OptionsView, MyProductsView,
+    DesignerListView, DesignerDetailView,
+    AdminProductModerationListView, AdminProductModerationReviewView,
+)
 
 router = DefaultRouter()
 router.register('products', ProductViewSet)
@@ -12,4 +16,8 @@ urlpatterns = [
     path('my-products/', MyProductsView.as_view(), name='my-products'),
     path('designers/', DesignerListView.as_view(), name='designers'),
     path('designers/<int:id>/', DesignerDetailView.as_view(), name='designer-detail'),
+    path('admin/products/', AdminProductModerationListView.as_view(),
+         name='admin-products-moderation'),
+    path('admin/products/<int:pk>/review/',
+         AdminProductModerationReviewView.as_view(), name='admin-product-review'),
 ]

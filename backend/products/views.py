@@ -1,4 +1,5 @@
-from rest_framework import viewsets, permissions, filters
+from rest_framework import viewsets, permissions, filters, status
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.db.models import Q
@@ -28,6 +29,25 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(designer=self.request.user)
+
+    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAuthenticated, IsDesigner])
+    def submit(self, request, pk=None):
+        try:
+            product = Product.objects.get(pk=pk, designer=request.user)
+        except Product.DoesNotExist:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        if product.moderation_status not in ("draft", "rejected"):
+            return Response(
+                {"detail": f"Product is {product.moderation_status}; cannot resubmit."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        product.moderation_status = "pending_review"
+        product.rejection_reason = ""
+        product.save(update_fields=["moderation_status", "rejection_reason", "updated_at"])
+        return Response({
+            "id": product.id,
+            "moderation_status": product.moderation_status,
+        })
 
     def get_queryset(self):
         qs = Product.objects.all()
@@ -161,3 +181,88 @@ class OptionsView(APIView):
             "fits": [{"value": k, "label": v} for k, v in FIT_TYPE_CHOICES],
             "sizes": ["XS", "S", "M", "L", "XL", "XXL"],
         })
+
+
+class AdminProductModerationListView(APIView):
+    """Admin queue of products awaiting review.
+
+    Accepts ``?status=pending_review|draft|published|rejected|all`` (defaults to
+    pending_review). Returns enough shape for the queue UI without dragging the
+    full detail serializer in.
+    """
+    permission_classes = [permissions.IsAdminUser]
+
+    def get(self, request):
+        status_filter = request.query_params.get("status", "pending_review")
+        qs = Product.objects.select_related("category", "designer").all()
+        if status_filter != "all":
+            qs = qs.filter(moderation_status=status_filter)
+        return Response([
+            {
+                "id": p.id,
+                "name": p.name,
+                "description": p.description,
+                "price": str(p.price),
+                "currency": p.currency,
+                "images": p.images,
+                "image_url": (p.images[0] if p.images else None),
+                "designer_id": p.designer_id,
+                "designer_name": p.designer.username if p.designer else None,
+                "category": p.category.name if p.category else None,
+                "material": p.material,
+                "fit_type": p.fit_type,
+                "sizes": p.sizes,
+                "colors": p.colors,
+                "moderation_status": p.moderation_status,
+                "rejection_reason": p.rejection_reason,
+                "is_published": p.is_published,
+                "created_at": p.created_at,
+                "updated_at": p.updated_at,
+            }
+            for p in qs
+        ])
+
+
+class AdminProductModerationReviewView(APIView):
+    """Approve or reject a product. Approval flips is_published to True.
+
+    Body: ``{"action": "approve"}`` or
+    ``{"action": "reject", "rejection_reason": "..."}``.
+    """
+    permission_classes = [permissions.IsAdminUser]
+
+    def post(self, request, pk):
+        try:
+            product = Product.objects.get(pk=pk)
+        except Product.DoesNotExist:
+            return Response({"detail": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        action = request.data.get("action")
+        if action == "approve":
+            product.moderation_status = "published"
+            product.is_published = True
+            product.rejection_reason = ""
+            product.save(update_fields=[
+                "moderation_status", "is_published", "rejection_reason", "updated_at",
+            ])
+            return Response({"id": product.id, "moderation_status": product.moderation_status,
+                             "is_published": product.is_published})
+        if action == "reject":
+            reason = request.data.get("rejection_reason", "").strip()
+            if not reason:
+                return Response(
+                    {"detail": "A rejection reason is required."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            product.moderation_status = "rejected"
+            product.is_published = False
+            product.rejection_reason = reason
+            product.save(update_fields=[
+                "moderation_status", "is_published", "rejection_reason", "updated_at",
+            ])
+            return Response({"id": product.id, "moderation_status": product.moderation_status,
+                             "rejection_reason": product.rejection_reason})
+        return Response(
+            {"detail": "Invalid action. Use 'approve' or 'reject'."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
