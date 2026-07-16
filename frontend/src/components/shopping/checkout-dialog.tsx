@@ -140,7 +140,7 @@ export function CheckoutDialog({
     }
   };
 
-  const checkPaymentStatus = useCallback(async () => {
+  const checkPaymentStatus = useCallback(async (silent = false) => {
     const tid = usePaymentStore.getState().currentTransactionId;
     if (!tid) return;
     setCheckingPayment(true);
@@ -154,19 +154,25 @@ export function CheckoutDialog({
         setPaymentStatus("paid");
         setStep("confirm");
         onSuccess?.(order?.orderId || "");
-        toast.success("Payment confirmed!");
+        if (!silent) toast.success("Payment confirmed!");
       } else if (data?.data?.status === "failed") {
         setPaymentStatus("failed");
-        toast.error("Payment failed. Please try again.");
-      } else {
+        if (!silent) toast.error("Payment failed. Please try again.");
+      } else if (!silent) {
         toast.info("Payment still pending. Check back later.");
       }
     } catch {
-      toast.error("Could not check payment status.");
+      if (!silent) toast.error("Could not check payment status.");
     } finally {
       setCheckingPayment(false);
     }
   }, [order, onSuccess, setPaymentStatus]);
+
+  useEffect(() => {
+    if (step !== "payment") return;
+    const id = setInterval(() => checkPaymentStatus(true), 10000);
+    return () => clearInterval(id);
+  }, [step, checkPaymentStatus]);
 
   const [timeLeft, setTimeLeft] = useState("");
   useEffect(() => {
