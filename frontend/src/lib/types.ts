@@ -8,7 +8,9 @@ export type ViewMode =
   | "marketplace"
   | "designers"
   | "wardrobe"
-  | "playground";
+  | "playground"
+  | "earnings"
+  | "admin";
 
 export type ComparisonMode = "before-after" | "side-by-side" | "slider";
 
@@ -232,6 +234,8 @@ export interface CheckoutItem {
   color: string;
   price: number;
   quantity: number;
+  sellerName?: string;
+  sellerId?: string;
 }
 
 export interface CheckoutRequest {
@@ -245,7 +249,7 @@ export interface CheckoutRequest {
     zip: string;
     country: string;
   };
-  payment: {
+  payment?: {
     cardName: string;
     cardNumber: string;
     expiry: string;
@@ -262,6 +266,13 @@ export interface CheckoutResponse {
   orderId?: string;
   error?: string;
   eta?: string;
+  virtual_account?: {
+    account_number: string;
+    bank_name: string;
+    amount: string;
+    expires_at: string;
+    transaction_id: number;
+  };
 }
 
 export interface ReviewSubmission {
@@ -278,6 +289,119 @@ export interface ReviewSubmissionResponse {
   success: boolean;
   review?: ProductReview;
   error?: string;
+}
+
+// ===========================================================================
+// Payment & ALATPay Integration
+// ===========================================================================
+
+export interface VirtualAccountResponse {
+  status: boolean;
+  data?: {
+    transaction_id: number;
+    alatpay_transaction_id: string;
+    virtual_account_number: string;
+    virtual_bank_name: string;
+    amount: string;
+    expired_at: string;
+  };
+  error?: string;
+}
+
+export interface PaymentStatusResponse {
+  status: boolean;
+  data: {
+    transaction_id: number;
+    alatpay_transaction_id: string;
+    status: string;
+    amount: string;
+    paid_at: string | null;
+  };
+}
+
+export interface TransactionRecord {
+  id: number;
+  user: number;
+  user_username: string;
+  user_email: string;
+  order: number | null;
+  alatpay_transaction_id: string;
+  virtual_account_number: string;
+  virtual_bank_name: string;
+  amount: string;
+  fee: string;
+  net_amount: string;
+  currency: string;
+  status: string;
+  payment_method: string;
+  channel: string;
+  created_at: string;
+  paid_at: string | null;
+}
+
+export interface DesignerEarningRecord {
+  id: number;
+  designer: number;
+  designer_username: string;
+  transaction_id_display: string;
+  order_item: Record<string, unknown>;
+  amount: string;
+  platform_fee: string;
+  net_amount: string;
+  status: string;
+  created_at: string;
+}
+
+export interface EarningsSummary {
+  total_earned: string;
+  available: string;
+  pending: string;
+  paid_out: string;
+  total_transactions: number;
+}
+
+export interface PayoutRecord {
+  id: number;
+  designer: number;
+  designer_username: string;
+  amount: string;
+  status: string;
+  bank_name: string;
+  bank_account_number: string;
+  bank_account_name: string;
+  reference: string;
+  note: string;
+  paid_at: string | null;
+  created_at: string;
+}
+
+export interface PayoutMethodRecord {
+  id: number;
+  user: number;
+  bank_name: string;
+  bank_account_number: string;
+  bank_account_name: string;
+  is_default: boolean;
+}
+
+export interface AdminDashboardSummary {
+  total_revenue: string;
+  pending_payouts: string;
+  total_commission: string;
+  total_transactions: number;
+  paid_transactions: number;
+  total_designers: number;
+  pending_payout_count: number;
+}
+
+export interface InitiatePaymentRequest {
+  amount: number;
+  order_id: string;
+  description?: string;
+  customer_email: string;
+  customer_phone?: string;
+  customer_first_name?: string;
+  customer_last_name?: string;
 }
 
 // ===========================================================================

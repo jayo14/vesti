@@ -1,19 +1,21 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Menu, X, ShoppingBag } from "lucide-react";
+import { Sparkles, Menu, X, ShoppingBag, Wallet, Shield } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useStudioStore } from "@/lib/store";
 import type { ViewMode } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const NAV_ITEMS: { id: ViewMode; label: string }[] = [
+const NAV_ITEMS: { id: ViewMode; label: string; icon?: typeof Sparkles }[] = [
   { id: "hero", label: "Home" },
   { id: "studio", label: "Studio" },
   { id: "playground", label: "Playground" },
   { id: "marketplace", label: "Marketplace" },
   { id: "designers", label: "Designers" },
   { id: "wardrobe", label: "Wardrobe" },
+  { id: "earnings", label: "Earnings", icon: Wallet },
+  { id: "admin", label: "Admin", icon: Shield },
 ];
 
 export function SiteHeader() {
@@ -79,6 +81,8 @@ export function SiteHeader() {
             <nav className="hidden md:flex items-center gap-1">
               {NAV_ITEMS.map((item) => {
                 const active = view === item.id;
+                const isEarnings = item.id === "earnings";
+                const isAdmin = item.id === "admin";
                 return (
                   <button
                     key={item.id}
@@ -87,7 +91,8 @@ export function SiteHeader() {
                       "relative px-4 py-2 text-sm font-medium rounded-full transition-colors",
                       active
                         ? "text-foreground"
-                        : "text-muted-foreground hover:text-foreground"
+                        : "text-muted-foreground hover:text-foreground",
+                      (isEarnings || isAdmin) && "hidden lg:flex items-center gap-1"
                     )}
                   >
                     {active && (
@@ -97,7 +102,10 @@ export function SiteHeader() {
                         transition={{ type: "spring", stiffness: 380, damping: 30 }}
                       />
                     )}
-                    <span className="relative z-10">{item.label}</span>
+                    <span className="relative z-10 flex items-center gap-1">
+                      {item.icon && <item.icon className="w-3.5 h-3.5" />}
+                      {item.label}
+                    </span>
                   </button>
                 );
               })}

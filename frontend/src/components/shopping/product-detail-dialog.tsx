@@ -133,6 +133,7 @@ function ProductDetailContent({
       price: product.price,
       quantity: qty,
       sellerName: product.sellerName,
+      sellerId: product.sellerId,
     };
     addToCart(item);
     toast.success(`Added ${product.name} to bag.`);
