@@ -139,3 +139,6 @@ ALATPAY_SECRET_KEY = os.environ.get('ALATPAY_SECRET_KEY', '')
 ALATPAY_BUSINESS_ID = os.environ.get('ALATPAY_BUSINESS_ID', '')
 ALATPAY_WEBHOOK_SECRET = os.environ.get('ALATPAY_WEBHOOK_SECRET', '')
 ALATPAY_SPLIT_CODE = os.environ.get('ALATPAY_SPLIT_CODE', '')
+
+# Vision Engine (CV pipeline: detect -> pose -> parse -> measurements -> garment segment -> tryon -> enhance)
+VISION_ENGINE_URL = os.environ.get('VISION_ENGINE_URL', 'http://localhost:8100')
