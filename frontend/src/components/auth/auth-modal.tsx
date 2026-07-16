@@ -14,7 +14,7 @@ export function AuthModal({ open, onOpenChange }: { open: boolean; onOpenChange:
   const [mode, setMode] = useState<"login" | "register">("login");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [form, setForm] = useState({ username: "", email: "", password: "" });
+  const [form, setForm] = useState({ full_name: "", email: "", password: "" });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +34,7 @@ export function AuthModal({ open, onOpenChange }: { open: boolean; onOpenChange:
       const r = await fetch(`${API_BASE}/api/auth/login/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: form.username, password: form.password }),
+        body: JSON.stringify({ email: form.email, password: form.password }),
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d.detail || "Invalid credentials");
@@ -62,12 +62,12 @@ export function AuthModal({ open, onOpenChange }: { open: boolean; onOpenChange:
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-3">
-          <input required value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })}
-            placeholder="Username" className="w-full px-3 py-2 text-sm rounded-xl border bg-background" />
           {mode === "register" && (
-            <input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
-              placeholder="Email" className="w-full px-3 py-2 text-sm rounded-xl border bg-background" />
+            <input required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+              placeholder="Full Name" className="w-full px-3 py-2 text-sm rounded-xl border bg-background" />
           )}
+          <input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
+            placeholder="Email" className="w-full px-3 py-2 text-sm rounded-xl border bg-background" />
           <div className="relative">
             <input required type={showPassword ? "text" : "password"} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })}
               placeholder="Password" className="w-full px-3 py-2 text-sm rounded-xl border bg-background pr-10" />
