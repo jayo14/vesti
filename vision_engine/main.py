@@ -1,11 +1,15 @@
-"""Vesti Vision Engine — FastAPI application (Stage 0 scaffolding).
+"""Vesti Vision Engine — FastAPI application (Stage 2).
 
-This service hosts the computer-vision pipeline (detection, pose, parsing,
-measurements, garment segmentation, try-on, enhancement, recommendation).
+Hosts the computer-vision pipeline (detection, pose, parsing, measurements,
+garment segmentation, try-on, enhancement). Each route delegates to a module
+under this package that (1) uses a hosted inference provider when configured,
+(2) runs a local self-hosted model when its deps are present, or (3) returns a
+clean error payload (never a raw 500) via `VisionError`.
 
-Stage 0 only wires the API surface + schemas + deterministic mock responses so
-the Django backend and frontend can integrate against a stable contract. No ML
-models are loaded yet.
+The previous Stage-0 mock responses are removed; the pipeline now requires a
+real backend (hosted or local). `app` still reports `mock_mode` only when both
+the hosted provider and local models are absent — in which case routes return
+503/422 with actionable hints.
 """
 from __future__ import annotations
 
@@ -14,14 +18,23 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .config import get_settings
+from .core.errors import VisionError, vision_exception_handler
 from . import schemas as s
+
+from .detection import detect as _detect
+from .pose import pose as _pose
+from .parsing import parse as _parse
+from .measurements import from_request as _measure
+from .garments import segment as _segment
+from .tryon import tryon as _tryon
+from .enhancement import enhance as _enhance
 
 settings = get_settings()
 
 app = FastAPI(
     title=settings.app_name,
-    version="0.1.0",
-    description="Computer-vision pipeline for Vesti. Stage 0: contracts + mock responses.",
+    version="0.2.0",
+    description="Computer-vision pipeline for Vesti. Stage 2: real model wiring with graceful degradation.",
 )
 
 app.add_middleware(
@@ -32,6 +45,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.add_exception_handler(VisionError, vision_exception_handler)
+
 
 @app.get("/health")
 def health() -> JSONResponse:
@@ -41,114 +56,41 @@ def health() -> JSONResponse:
             "service": settings.app_name,
             "mock_mode": settings.is_mock_mode,
             "device": settings.device,
+            "hosted_provider": settings.hosted_provider,
         }
     )
 
 
 @app.post("/v1/detect", response_model=s.DetectResponse)
 def detect(req: s.DetectRequest) -> s.DetectResponse:
-    return s.DetectResponse(
-        boxes=[
-            s.BoundingBox(
-                label="person",
-                confidence=0.98,
-                x_min=0.12,
-                y_min=0.08,
-                x_max=0.88,
-                y_max=0.96,
-            )
-        ]
-    )
+    return _detect(req)
 
 
 @app.post("/v1/pose", response_model=s.PoseResponse)
 def pose(req: s.PoseRequest) -> s.PoseResponse:
-    # 33 MediaPipe landmarks laid out on a centered standing figure.
-    landmarks = [
-        s.Landmark(x=0.5, y=0.05 + i * 0.025, z=0.0, visibility=0.95)
-        for i in range(33)
-    ]
-    return s.PoseResponse(landmarks=landmarks, confidence=0.95)
+    return _pose(req)
 
 
 @app.post("/v1/parse", response_model=s.ParseResponse)
 def parse(req: s.ParseRequest) -> s.ParseResponse:
-    return s.ParseResponse(
-        mask_image_url=None,
-        regions=[
-            s.ParseRegion(region="hair", confidence=0.97),
-            s.ParseRegion(region="face", confidence=0.98),
-            s.ParseRegion(region="upper_cloth", confidence=0.96),
-            s.ParseRegion(region="lower_cloth", confidence=0.95),
-            s.ParseRegion(region="left_arm", confidence=0.93),
-            s.ParseRegion(region="right_arm", confidence=0.93),
-            s.ParseRegion(region="left_leg", confidence=0.94),
-            s.ParseRegion(region="right_leg", confidence=0.94),
-            s.ParseRegion(region="skin", confidence=0.90),
-        ],
-    )
+    return _parse(req)
 
 
 @app.post("/v1/measurements", response_model=s.MeasurementsResponse)
 def measurements(req: s.MeasurementsRequest) -> s.MeasurementsResponse:
-    # Plausible fake numbers for a ~170cm silhouette.
-    return s.MeasurementsResponse(
-        shoulder_width_cm=41.0,
-        chest_cm=96.0,
-        waist_cm=80.0,
-        hip_cm=98.0,
-        arm_length_cm=62.0,
-        leg_length_cm=84.0,
-        confidence=0.91,
-    )
+    return _measure(req)
 
 
 @app.post("/v1/garment/segment", response_model=s.GarmentSegmentResponse)
 def garment_segment(req: s.GarmentSegmentRequest) -> s.GarmentSegmentResponse:
-    garment_type = (req.prompt or "garment").strip().lower() or "garment"
-    return s.GarmentSegmentResponse(
-        cutout_image_url=None,
-        garment_type=garment_type,
-        bounding_polygon=[
-            s.PolygonPoint(x=0.2, y=0.1),
-            s.PolygonPoint(x=0.8, y=0.1),
-            s.PolygonPoint(x=0.85, y=0.9),
-            s.PolygonPoint(x=0.15, y=0.9),
-        ],
-        confidence=0.94,
-    )
+    return _segment(req)
 
 
 @app.post("/v1/tryon", response_model=s.TryOnResponse)
 def tryon(req: s.TryOnRequest) -> s.TryOnResponse:
-    return s.TryOnResponse(result_image_url=None, fit_confidence=0.88)
+    return _tryon(req)
 
 
 @app.post("/v1/enhance", response_model=s.EnhanceResponse)
 def enhance(req: s.EnhanceRequest) -> s.EnhanceResponse:
-    return s.EnhanceResponse(enhanced_image_url=None, scale=req.scale)
-
-
-@app.post("/v1/recommend", response_model=s.RecommendResponse)
-def recommend(req: s.RecommendRequest) -> s.RecommendResponse:
-    ids = [item.id for item in req.wardrobe]
-    outfits = [
-        s.OutfitSuggestion(
-            title=f"{req.occasion.title()} look",
-            rationale=(
-                f"A {req.dress_code} outfit tuned for {req.weather} weather, "
-                f"built from {len(ids)} wardrobe item(s)."
-            ),
-            wardrobe_item_ids=ids[: min(3, len(ids))],
-            marketplace_suggestions=(
-                [{"productId": "p1", "reason": "Completes the silhouette."}]
-                if req.marketplace_suggestions
-                else []
-            ),
-            styling_tips=[
-                "Layer for warmth if the temperature drops.",
-                "Keep accessories minimal to let the outfit breathe.",
-            ],
-        )
-    ]
-    return s.RecommendResponse(outfits=outfits)
+    return _enhance(req)

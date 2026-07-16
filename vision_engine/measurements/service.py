@@ -95,7 +95,7 @@ def estimate(
         hip_width = _dist(landmarks[_L_HIP], landmarks[_R_HIP]) * scale
         chest_cm = shoulder_width * 2.4
         waist_cm = shoulder_width * 2.0
-        hip_cm = max(hip_width * 3.14159 * BODY_RATIO, shoulder_width * 2.5)
+        hip_cm = max(hip_width * 2.0, shoulder_width * 2.55)
 
     # --- Confidence -------------------------------------------------------
     vis = [landmarks[i].visibility for i in (_L_SHOULDER, _R_SHOULDER, _L_HIP, _R_HIP, _L_KNEE, _R_KNEE)]
