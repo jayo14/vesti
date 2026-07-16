@@ -22,7 +22,9 @@ urlpatterns = [
     path('admin/earnings/', views.AdminEarningsListView.as_view(), name='admin-earnings'),
     path('admin/payouts/', views.AdminPayoutListView.as_view(), name='admin-payouts'),
     path('admin/payouts/process/', views.AdminPayoutProcessView.as_view(), name='admin-payouts-process'),
+    path('admin/payouts/<int:pk>/finalize/', views.AdminPayoutFinalizeView.as_view(), name='admin-payout-finalize'),
     path('admin/dashboard/', views.AdminDashboardSummaryView.as_view(), name='admin-dashboard'),
+    path('admin/ai-health/', views.AdminAIHealthView.as_view(), name='admin-ai-health'),
 
     # Webhook
     path('webhooks/alatpay/', alatpay_webhook, name='alatpay-webhook'),

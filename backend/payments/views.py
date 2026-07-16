@@ -2,7 +2,7 @@ import json
 from decimal import Decimal
 from datetime import timedelta
 from django.utils import timezone
-from django.db import transaction as db_transaction
+from django.db import transaction as db_transaction, models
 from django.conf import settings
 from rest_framework import generics, permissions, status, views
 from rest_framework.response import Response
@@ -306,6 +306,12 @@ class AdminPayoutListView(generics.ListAPIView):
 
 
 class AdminPayoutProcessView(APIView):
+    """Batch-mark pending payouts as ``processing``.
+
+    Kept for backwards-compat with the existing admin UI batch button; the
+    per-payout finalise endpoint below lets ops walk each row through
+    processing → paid / failed once the bank leg completes.
+    """
     permission_classes = [permissions.IsAdminUser]
 
     def post(self, request):
@@ -313,24 +319,115 @@ class AdminPayoutProcessView(APIView):
         serializer.is_valid(raise_exception=True)
         payout_ids = serializer.validated_data['payout_ids']
         payouts = Payout.objects.filter(id__in=payout_ids, status='pending')
-        for payout in payouts:
-            payout.status = 'processing'
-            payout.save()
+        count = payouts.update(status='processing')
         return Response({
             "status": True,
-            "processed": payouts.count(),
-            "message": f"{payouts.count()} payouts marked as processing",
+            "processed": count,
+            "message": f"{count} payouts marked as processing",
         })
 
 
+class AdminPayoutFinalizeView(APIView):
+    """Finalise a single payout row.
+
+    Body: ``{"action": "mark_paid" | "mark_failed" | "reject", "note": "..."}``.
+    Marks the payout row and, on failure/reject, returns associated
+    ``DesignerEarning`` rows to the ``available`` pool so the designer can
+    re-request the payout.
+    """
+    permission_classes = [permissions.IsAdminUser]
+
+    def post(self, request, pk):
+        try:
+            payout = Payout.objects.get(pk=pk)
+        except Payout.DoesNotExist:
+            return Response({"detail": "Payout not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        action = request.data.get("action")
+        note = request.data.get("note", "")
+
+        if action == "mark_paid":
+            if payout.status not in ("pending", "processing"):
+                return Response(
+                    {"detail": f"Cannot mark a {payout.status} payout as paid."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            payout.status = "paid"
+            payout.paid_at = timezone.now()
+            if note:
+                payout.note = note
+            payout.save()
+            return Response(PayoutSerializer(payout).data)
+
+        if action in ("mark_failed", "reject"):
+            if payout.status == "paid":
+                return Response(
+                    {"detail": "Cannot fail a paid payout. Refund out-of-band instead."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            payout.status = "failed"
+            payout.note = note or ("Rejected by admin" if action == "reject" else "Marked failed by admin")
+            payout.save()
+            # Return earnings previously allocated to this payout to the pool.
+            # Earnings aren't FK-linked to Payout in this schema so we approximate
+            # by re-opening the designer's most recent paid earnings up to the
+            # payout amount.
+            remaining = payout.amount
+            earnings = (
+                DesignerEarning.objects.filter(designer=payout.designer, status="paid")
+                .order_by("-updated_at")
+            )
+            for earning in earnings:
+                if remaining <= 0:
+                    break
+                earning.status = "available"
+                earning.save()
+                remaining -= earning.net_amount
+            return Response(PayoutSerializer(payout).data)
+
+        return Response(
+            {"detail": "Invalid action. Use mark_paid, mark_failed, or reject."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
 class AdminDashboardSummaryView(APIView):
+    """Overview stats for the admin landing screen.
+
+    Bundles revenue, payout, moderation, AI, and growth snapshots so the
+    dashboard renders in one round trip instead of six.
+    """
     permission_classes = [permissions.IsAdminUser]
 
     def get(self, request):
-        total_revenue = sum(t.amount for t in Transaction.objects.filter(status='paid'))
-        pending_payouts = sum(p.amount for p in Payout.objects.filter(status='pending'))
-        total_commission = sum(e.platform_fee for e in DesignerEarning.objects.all())
+        from django.db.models import Sum, Count
+        from products.models import Product
+        from studio.models import Generation
+        from accounts.models import DesignerApplication
+        from disputes.models import Dispute
+
+        total_revenue = Transaction.objects.filter(status='paid').aggregate(s=Sum('amount'))['s'] or 0
+        pending_payouts = Payout.objects.filter(status='pending').aggregate(s=Sum('amount'))['s'] or 0
+        total_commission = DesignerEarning.objects.aggregate(s=Sum('platform_fee'))['s'] or 0
+
+        now = timezone.now()
+        last_7 = now - timedelta(days=7)
+        last_30 = now - timedelta(days=30)
+
+        gen_last_7 = Generation.objects.filter(created_at__gte=last_7)
+        gen_total_7 = gen_last_7.count()
+        gen_completed_7 = gen_last_7.filter(status=Generation.STATUS_COMPLETED).count()
+        gen_failed_7 = gen_last_7.filter(status=Generation.STATUS_FAILED).count()
+        # Avoid divide-by-zero — a fresh install shouldn't blow up the dashboard.
+        success_rate_7 = (
+            round(gen_completed_7 * 100 / gen_total_7, 1) if gen_total_7 else 0
+        )
+        avg_latency = gen_last_7.filter(
+            status=Generation.STATUS_COMPLETED, latency_ms__gt=0,
+        ).aggregate(avg=models.Avg('latency_ms'))['avg'] or 0
+
         return Response({
+            # Legacy fields kept for existing frontend compatibility.
             "total_revenue": str(total_revenue),
             "pending_payouts": str(pending_payouts),
             "total_commission": str(total_commission),
@@ -338,4 +435,108 @@ class AdminDashboardSummaryView(APIView):
             "paid_transactions": Transaction.objects.filter(status='paid').count(),
             "total_designers": User.objects.filter(is_designer=True).count(),
             "pending_payout_count": Payout.objects.filter(status='pending').count(),
+            # New snapshot sections.
+            "queues": {
+                "pending_designer_applications": DesignerApplication.objects.filter(status='pending').count(),
+                "pending_product_reviews": Product.objects.filter(moderation_status='pending_review').count(),
+                "open_disputes": Dispute.objects.filter(status__in=['open', 'in_review']).count(),
+                "pending_payouts": Payout.objects.filter(status='pending').count(),
+            },
+            "ai_health_7d": {
+                "generations": gen_total_7,
+                "completed": gen_completed_7,
+                "failed": gen_failed_7,
+                "success_rate": success_rate_7,
+                "avg_latency_ms": int(avg_latency),
+            },
+            "growth": {
+                "new_users_7d": User.objects.filter(date_joined__gte=last_7).count(),
+                "new_users_30d": User.objects.filter(date_joined__gte=last_30).count(),
+                "new_designers_30d": User.objects.filter(
+                    is_designer=True, date_joined__gte=last_30,
+                ).count(),
+                "new_products_30d": Product.objects.filter(created_at__gte=last_30).count(),
+                "paid_transactions_30d": Transaction.objects.filter(
+                    status='paid', created_at__gte=last_30,
+                ).count(),
+            },
+        })
+
+
+class AdminAIHealthView(APIView):
+    """Structured AI health metrics for the dedicated AI dashboard tab.
+
+    Returns success/failure counts, failure-reason breakdown, latency
+    distribution, and the latest 20 failed generations for quick triage.
+    """
+    permission_classes = [permissions.IsAdminUser]
+
+    def get(self, request):
+        from studio.models import Generation
+
+        window_days = int(request.query_params.get("days", "7"))
+        cutoff = timezone.now() - timedelta(days=window_days)
+
+        qs = Generation.objects.filter(created_at__gte=cutoff)
+        total = qs.count()
+        completed = qs.filter(status=Generation.STATUS_COMPLETED).count()
+        failed = qs.filter(status=Generation.STATUS_FAILED).count()
+        processing = qs.filter(status=Generation.STATUS_PROCESSING).count()
+
+        by_reason = (
+            qs.filter(status=Generation.STATUS_FAILED)
+            .values("failure_reason")
+            .annotate(count=models.Count("id"))
+            .order_by("-count")
+        )
+
+        latency_stats = qs.filter(
+            status=Generation.STATUS_COMPLETED, latency_ms__gt=0,
+        ).aggregate(
+            avg=models.Avg("latency_ms"),
+            fastest=models.Min("latency_ms"),
+            slowest=models.Max("latency_ms"),
+        )
+
+        recent_failures = list(
+            qs.filter(status=Generation.STATUS_FAILED)
+            .select_related("user", "product")
+            .order_by("-created_at")[:20]
+            .values(
+                "id", "created_at", "failure_reason", "error", "latency_ms",
+                "user__username", "product__name", "model",
+            )
+        )
+
+        return Response({
+            "window_days": window_days,
+            "totals": {
+                "generations": total,
+                "completed": completed,
+                "failed": failed,
+                "processing": processing,
+                "success_rate": round(completed * 100 / total, 1) if total else 0,
+            },
+            "failures_by_reason": [
+                {"reason": row["failure_reason"] or "unknown", "count": row["count"]}
+                for row in by_reason
+            ],
+            "latency_ms": {
+                "avg": int(latency_stats["avg"] or 0),
+                "fastest": latency_stats["fastest"] or 0,
+                "slowest": latency_stats["slowest"] or 0,
+            },
+            "recent_failures": [
+                {
+                    "id": row["id"],
+                    "created_at": row["created_at"],
+                    "failure_reason": row["failure_reason"] or "unknown",
+                    "error": row["error"],
+                    "latency_ms": row["latency_ms"],
+                    "user_username": row["user__username"],
+                    "product_name": row["product__name"],
+                    "model": row["model"],
+                }
+                for row in recent_failures
+            ],
         })
