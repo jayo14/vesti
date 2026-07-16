@@ -17,6 +17,7 @@ export function DesignerDashboardSection() {
   const [loading, setLoading] = useState(true);
   const [dash, setDash] = useState<any>(null);
   const [showForm, setShowForm] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<number | null>(null);
   const [categories, setCategories] = useState<any[]>([]);
@@ -51,6 +52,33 @@ export function DesignerDashboardSection() {
       } else toast.error("Failed to delete");
     } catch { toast.error("Failed"); }
     finally { setDeleting(null); }
+  };
+
+  const startEdit = (p: any) => {
+    setEditingProduct(p);
+    setNewProduct({ name: p.name, description: p.description || "", price: p.price.toString(), stock: p.stock.toString(), category: p.category_id?.toString() || "", image_url: p.image_url || "", is_published: p.is_published });
+    setShowForm(true);
+  };
+
+  const saveProduct = async () => {
+    if (!token || !newProduct.name || !newProduct.price) return;
+    setSaving(true);
+    try {
+      const url = editingProduct ? `${API_BASE}/api/products/${editingProduct.id}/` : `${API_BASE}/api/products/`;
+      const method = editingProduct ? "PUT" : "POST";
+      const r = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ ...newProduct, price: parseFloat(newProduct.price), stock: parseInt(newProduct.stock), category: parseInt(newProduct.category) || undefined }),
+      });
+      if (r.ok) {
+        toast.success(editingProduct ? "Product updated" : "Product added");
+        setShowForm(false);
+        setEditingProduct(null);
+        setNewProduct({ name: "", description: "", price: "", stock: "1", category: "", image_url: "", is_published: false });
+        fetchDash();
+      } else { const d = await r.json(); toast.error(Object.values(d).flat().join(", ")); }
+    } catch { toast.error("Failed"); } finally { setSaving(false); }
   };
 
   const addProduct = async () => {
@@ -109,7 +137,7 @@ export function DesignerDashboardSection() {
 
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-serif text-lg">My Products</h3>
-              <button onClick={() => setShowForm(!showForm)}
+              <button onClick={() => { setShowForm(!showForm); setEditingProduct(null); setNewProduct({ name: "", description: "", price: "", stock: "1", category: "", image_url: "", is_published: false }); }}
                 className="px-4 py-2 rounded-full bg-foreground text-background text-xs font-medium inline-flex items-center gap-1.5">
                 <Plus className="w-3.5 h-3.5" /> Add product
               </button>
@@ -139,9 +167,9 @@ export function DesignerDashboardSection() {
                     className="rounded border-border" />
                   Publish immediately
                 </label>
-                <button onClick={addProduct} disabled={saving}
+                <button onClick={saveProduct} disabled={saving}
                   className="w-full py-2 rounded-full bg-foreground text-background text-sm font-medium disabled:opacity-50 inline-flex items-center justify-center gap-2">
-                  {saving && <Loader2 className="w-4 h-4 animate-spin" />} Save product
+                  {saving && <Loader2 className="w-4 h-4 animate-spin" />} {editingProduct ? "Update" : "Save"}
                 </button>
               </motion.div>
             )}
@@ -165,7 +193,7 @@ export function DesignerDashboardSection() {
                       )}
                     </div>
                     <div className="flex items-center gap-1">
-                      <button className="p-2 rounded-full hover:bg-foreground/5"><Edit3 className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => startEdit(p)} className="p-2 rounded-full hover:bg-foreground/5"><Edit3 className="w-3.5 h-3.5" /></button>
                       <button onClick={() => deleteProduct(p.id)} disabled={deleting === p.id}
                         className="p-2 rounded-full hover:bg-red-500/10 transition-colors">
                         {deleting === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
