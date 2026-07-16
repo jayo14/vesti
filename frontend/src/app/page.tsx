@@ -13,6 +13,7 @@ import { WardrobeSection } from "@/components/sections/wardrobe-section";
 import { PlaygroundSection } from "@/components/sections/playground-section";
 import { EarningsSection } from "@/components/sections/earnings-section";
 import { AdminSection } from "@/components/sections/admin-section";
+import { DesignerDashboardSection } from "@/components/sections/designer-dashboard-section";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -48,6 +49,7 @@ export default function Home() {
             {view === "playground" && <PlaygroundSection />}
             {view === "earnings" && <EarningsSection />}
             {view === "admin" && <AdminSection />}
+            {view === "designer-dashboard" && <DesignerDashboardSection />}
           </motion.div>
         </AnimatePresence>
       </main>
