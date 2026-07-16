@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Sparkles, Image as ImageIcon, Heart, Wand2 } from "lucide-react";
 import { useStudioStore } from "@/lib/store";
-import { FEATURED_GARMENTS } from "@/lib/data";
+import { useProducts } from "@/lib/api/products";
 
 interface ImageSourcePickerProps {
   open: boolean;
@@ -23,6 +23,8 @@ export function ImageSourcePicker({
   onPick,
 }: ImageSourcePickerProps) {
   const { savedLooks, resultImage, personImage } = useStudioStore();
+  const { data: products = [] } = useProducts();
+  const featuredProduct = products[0] ?? null;
 
   const sources: {
     id: string;
@@ -55,9 +57,10 @@ export function ImageSourcePicker({
     {
       id: "featured",
       label: "Featured garment",
-      sub: "Start from a curated piece",
+      sub: featuredProduct ? featuredProduct.name : "Start from a curated piece",
       icon: Sparkles,
-      badge: "3",
+      image: featuredProduct?.images[0]?.url || featuredProduct?.image || null,
+      badge: String(products.length || "0"),
     },
   ];
 
@@ -81,9 +84,8 @@ export function ImageSourcePicker({
                     onPick(resultImage, "Studio result");
                     onOpenChange(false);
                   } else if (s.id === "featured") {
-                    const g = FEATURED_GARMENTS[0];
-                    if (g) {
-                      onPick(g.image, g.name);
+                    if (featuredProduct) {
+                      onPick(featuredProduct.images[0]?.url || featuredProduct.image, featuredProduct.name);
                       onOpenChange(false);
                     }
                   }
