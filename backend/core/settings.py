@@ -140,5 +140,8 @@ ALATPAY_BUSINESS_ID = os.environ.get('ALATPAY_BUSINESS_ID', '')
 ALATPAY_WEBHOOK_SECRET = os.environ.get('ALATPAY_WEBHOOK_SECRET', '')
 ALATPAY_SPLIT_CODE = os.environ.get('ALATPAY_SPLIT_CODE', '')
 
+# OpenRouter (LLM: GPT-4o for outfit recs, styling tips, smart search)
+OPENROUTER_API_KEY = os.environ.get('OPENROUTER_API_KEY', '')
+
 # Vision Engine (CV pipeline: detect -> pose -> parse -> measurements -> garment segment -> tryon -> enhance)
 VISION_ENGINE_URL = os.environ.get('VISION_ENGINE_URL', 'http://localhost:8100')
