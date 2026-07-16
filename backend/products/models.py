@@ -21,6 +21,7 @@ class Product(models.Model):
     sizes = models.JSONField(default=list)
     colors = models.JSONField(default=list)
     stock = models.IntegerField(default=0)
+    is_published = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

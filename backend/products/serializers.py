@@ -10,21 +10,47 @@ class CategorySerializer(serializers.ModelSerializer):
 class ProductListSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     designer_name = serializers.CharField(source='designer.username', read_only=True, default='')
+    image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'price', 'category', 'designer', 'designer_name', 'images', 'colors', 'stock', 'created_at']
+        fields = ['id', 'name', 'price', 'category', 'designer', 'designer_name', 'images', 'colors', 'stock', 'created_at', 'is_published', 'image_url']
+
+    def get_image_url(self, obj):
+        return obj.images[0] if obj.images else None
 
 class ProductDetailSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     reviews = ReviewSerializer(many=True, read_only=True)
     designer_name = serializers.CharField(source='designer.username', read_only=True, default='')
+    image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = '__all__'
 
+    def get_image_url(self, obj):
+        return obj.images[0] if obj.images else None
+
 class ProductCreateSerializer(serializers.ModelSerializer):
+    image_url = serializers.URLField(required=False, write_only=True, allow_blank=True)
+
     class Meta:
         model = Product
-        fields = ['name', 'description', 'price', 'category', 'images', 'sizes', 'colors', 'stock']
+        fields = ['name', 'description', 'price', 'category', 'image_url', 'images', 'sizes', 'colors', 'stock', 'is_published']
+
+    def create(self, validated_data):
+        image_url = validated_data.pop('image_url', '')
+        instance = super().create(validated_data)
+        if image_url and not instance.images:
+            instance.images = [image_url]
+            instance.save(update_fields=['images'])
+        return instance
+
+    def update(self, instance, validated_data):
+        image_url = validated_data.pop('image_url', '')
+        instance = super().update(instance, validated_data)
+        if image_url:
+            instance.images = [image_url]
+            instance.save(update_fields=['images'])
+        return instance
