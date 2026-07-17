@@ -10,8 +10,12 @@ caller can surface a clear message instead of a generic 500.
 """
 from __future__ import annotations
 
+import hashlib
+import json
+
 import requests
 from django.conf import settings
+from django.core.cache import cache
 
 
 class VisionEngineError(Exception):
@@ -95,30 +99,48 @@ def _call(path: str, payload: dict, timeout: int = 120) -> dict:
     raise VisionEngineError(message, status=status, hint=hint, code=code)
 
 
+def _cache_key(path: str, payload: dict) -> str:
+    raw = f"{path}:{json.dumps(payload, sort_keys=True)}"
+    return f"vision:{hashlib.sha256(raw.encode()).hexdigest()}"
+
+
+def _cached_call(path: str, payload: dict, timeout: int = 120, ttl: int = 3600) -> dict:
+    key = _cache_key(path, payload)
+    result = cache.get(key)
+    if result is not None:
+        return result
+    result = _call(path, payload, timeout=timeout)
+    cache.set(key, result, timeout=ttl)
+    return result
+
+
 def detect(person_image: str) -> dict:
-    return _call("/v1/detect", _image_field(person_image))
+    payload = _image_field(person_image)
+    return _cached_call("/v1/detect", payload, ttl=86400)
 
 
 def pose(person_image: str) -> dict:
-    return _call("/v1/pose", _image_field(person_image))
+    payload = _image_field(person_image)
+    return _cached_call("/v1/pose", payload, ttl=86400)
 
 
 def parse(person_image: str) -> dict:
-    return _call("/v1/parse", _image_field(person_image))
+    payload = _image_field(person_image)
+    return _cached_call("/v1/parse", payload, ttl=86400)
 
 
 def measurements(landmarks: list, height_cm: float, parsing_mask: str | None = None) -> dict:
     payload: dict = {"landmarks": landmarks, "height_cm": height_cm}
     if parsing_mask:
         payload["parsing_mask"] = parsing_mask
-    return _call("/v1/measurements", payload)
+    return _cached_call("/v1/measurements", payload, ttl=86400)
 
 
 def garment_segment(garment_image: str, prompt: str | None = None) -> dict:
     payload = _image_field(garment_image)
     if prompt:
         payload["prompt"] = prompt
-    return _call("/v1/garment/segment", payload)
+    return _cached_call("/v1/garment/segment", payload, ttl=86400)
 
 
 def tryon(
@@ -133,10 +155,12 @@ def tryon(
         "measurements": measurements_payload,
         "garment_metadata": garment_metadata,
     }
+    # Try-on results are not cached since each generation is unique
     return _call("/v1/tryon", payload, timeout=180)
 
 
 def enhance(image: str, scale: int = 2) -> dict:
     payload = _image_field(image)
     payload["scale"] = scale
+    # Enhancements are not cached since they depend on the current model state
     return _call("/v1/enhance", payload)

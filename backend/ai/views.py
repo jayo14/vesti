@@ -21,6 +21,7 @@ from .serializers import (
     EditSerializer,
 )
 from .vision_client import VisionEngineError, enhance as run_enhance
+from .throttles import AIUserThrottle, AIAnonThrottle
 
 logger = logging.getLogger("ai.views")
 
@@ -33,10 +34,9 @@ DRESS_CODE_LABELS = {
     "casual": "casual", "smart-casual": "smart-casual", "business": "business professional",
     "formal": "formal", "black-tie": "black-tie", "creative": "creative / expressive",
 }
-
-
 class OutfitRecommendView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [AIUserThrottle, AIAnonThrottle]
 
     def post(self, request):
         serializer = OutfitRecommendSerializer(data=request.data)
@@ -224,6 +224,7 @@ Rules:
 
 class StylingSuggestionsView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [AIUserThrottle, AIAnonThrottle]
 
     def post(self, request):
         serializer = StylingSuggestSerializer(data=request.data)
@@ -344,6 +345,7 @@ def _garment_metadata(product: Product | None, override_material: str | None = N
 
 class TryOnView(APIView):
     permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [AIUserThrottle]
 
     def post(self, request):
         data = request.data
@@ -493,6 +495,7 @@ class TryOnView(APIView):
 
 class SmartSearchView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [AIUserThrottle, AIAnonThrottle]
 
     def get(self, request):
         """Backward-compatible GET with basic icontains search."""
@@ -660,6 +663,7 @@ Return ONLY the JSON."""
 
 class EditView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [AIUserThrottle, AIAnonThrottle]
 
     def post(self, request):
         serializer = EditSerializer(data=request.data)
@@ -698,6 +702,7 @@ class EditView(APIView):
 
 class GenerateView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [AIUserThrottle, AIAnonThrottle]
 
     def post(self, request):
         serializer = GenerateSerializer(data=request.data)

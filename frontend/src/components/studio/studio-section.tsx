@@ -175,7 +175,8 @@ export function StudioSection() {
                 Re-measure
               </Link>
               <button onClick={() => setDismissReminder(true)}
-                className="text-xs text-muted-foreground hover:text-foreground">
+                className="text-xs text-muted-foreground hover:text-foreground"
+                aria-label="Dismiss re-measure reminder">
                 Dismiss
               </button>
             </div>
@@ -282,8 +283,9 @@ export function StudioSection() {
                   <button
                     onClick={handleStartOver}
                     className="text-xs text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
+                    aria-label="Start over with a new look"
                   >
-                    <RotateCcw className="w-3 h-3" /> Start over
+                    <RotateCcw className="w-3 h-3" aria-hidden="true" /> Start over
                   </button>
                 )}
               </div>

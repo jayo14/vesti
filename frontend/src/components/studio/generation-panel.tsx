@@ -275,9 +275,9 @@ export function GenerationPanel({ onGenerated, useSavedProfile, bodyProfile }: G
   // Error state
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+      <div className="flex flex-col items-center justify-center h-full p-8 text-center" role="alert" aria-live="assertive">
         <div className="w-14 h-14 rounded-2xl bg-destructive/10 flex items-center justify-center mb-4">
-          <AlertCircle className="w-7 h-7 text-destructive" />
+          <AlertCircle className="w-7 h-7 text-destructive" aria-hidden="true" />
         </div>
         <h3 className="font-serif text-xl mb-2">Something went wrong</h3>
         <p className="text-sm text-muted-foreground max-w-sm mb-6">{error}</p>
@@ -285,7 +285,7 @@ export function GenerationPanel({ onGenerated, useSavedProfile, bodyProfile }: G
           onClick={handleRetry}
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-foreground text-background text-sm font-medium hover:opacity-90 transition-opacity"
         >
-          <RefreshCw className="w-4 h-4" /> Try again
+          <RefreshCw className="w-4 h-4" aria-hidden="true" /> Try again
         </button>
       </div>
     );
@@ -338,6 +338,7 @@ export function GenerationPanel({ onGenerated, useSavedProfile, bodyProfile }: G
       <button
         onClick={generate}
         disabled={!personImage || (!selectedGarment && !customGarmentImage)}
+        aria-label={resultImage ? "Regenerate try-on look" : "Generate try-on look"}
         className={cn(
           "group inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-medium transition-all",
           personImage && (selectedGarment || customGarmentImage)
@@ -345,7 +346,7 @@ export function GenerationPanel({ onGenerated, useSavedProfile, bodyProfile }: G
             : "bg-muted text-muted-foreground cursor-not-allowed"
         )}
       >
-        <Wand2 className="w-4 h-4" />
+        <Wand2 className="w-4 h-4" aria-hidden="true" />
         {resultImage ? "Regenerate Look" : "Generate Try-On"}
       </button>
 
