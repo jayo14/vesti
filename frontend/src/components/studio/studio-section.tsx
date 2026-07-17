@@ -11,9 +11,13 @@ import {
   RotateCcw,
   ImageIcon,
   Layers,
+  Ruler,
+  AlertCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useStudioStore } from "@/lib/store";
+import { useAuthStore } from "@/lib/auth-store";
 import { getMaterial } from "@/lib/materials";
 import { PhotoUploader } from "./photo-uploader";
 import { GarmentSelector } from "./garment-selector";
@@ -21,11 +25,15 @@ import { GenerationPanel } from "./generation-panel";
 import { ComparisonViewer } from "./comparison-viewer";
 import { ActionBar } from "./action-bar";
 import { MaterialPicker } from "./material-picker";
+import { cn } from "@/lib/utils";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
 const EASE = [0.22, 1, 0.36, 1] as const;
+const SIX_MONTHS_MS = 6 * 30 * 24 * 60 * 60 * 1000;
 
 export function StudioSection() {
   const router = useRouter();
+  const token = useAuthStore((s) => s.token);
   const {
     personImage,
     setPersonImage,
@@ -39,6 +47,29 @@ export function StudioSection() {
     fitAnalysis,
     resetGeneration,
   } = useStudioStore();
+
+  const [bodyProfile, setBodyProfile] = useState<{
+    height_cm: number;
+    measurements: Record<string, number>;
+    updated_at: string;
+  } | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [dismissReminder, setDismissReminder] = useState(false);
+
+  useEffect(() => {
+    if (!token) { setProfileLoading(false); return; }
+    fetch(`${API_BASE}/api/auth/me/body-profile/`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((data) => setBodyProfile(data))
+      .catch(() => { /* no profile */ })
+      .finally(() => setProfileLoading(false));
+  }, [token]);
+
+  const isProfileOld =
+    bodyProfile &&
+    Date.now() - new Date(bodyProfile.updated_at).getTime() > SIX_MONTHS_MS;
 
   const [garmentPickerOpen, setGarmentPickerOpen] = useState(false);
   // Derived: result is visible whenever we have one and aren't mid-generation.
@@ -113,6 +144,44 @@ export function StudioSection() {
           />
         </div>
 
+        {/* Body profile banner */}
+        {!profileLoading && bodyProfile && bodyProfile.measurements && Object.keys(bodyProfile.measurements).length > 0 && (
+          <div className="mb-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 p-3 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm">
+              <Ruler className="w-4 h-4 text-emerald-500" />
+              <span>Using your saved measurements</span>
+              <span className="text-xs text-muted-foreground">
+                · {Object.keys(bodyProfile.measurements).length} measurements on file
+              </span>
+            </div>
+            <Link href="/account/profile/body"
+              className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2">
+              Update
+            </Link>
+          </div>
+        )}
+
+        {/* Re-measure prompt for old profiles */}
+        {!profileLoading && isProfileOld && !dismissReminder && (
+          <div className="mb-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 p-3 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm">
+              <AlertCircle className="w-4 h-4 text-amber-500" />
+              <span>Your body profile is over 6 months old</span>
+              <span className="text-xs text-muted-foreground">— consider re-measuring for better fit.</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Link href="/account/profile/body"
+                className="text-xs px-3 py-1.5 rounded-full bg-foreground text-background font-medium hover:opacity-90">
+                Re-measure
+              </Link>
+              <button onClick={() => setDismissReminder(true)}
+                className="text-xs text-muted-foreground hover:text-foreground">
+                Dismiss
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Main 2-col workspace */}
         <div className="grid lg:grid-cols-12 gap-6">
           {/* Left column: inputs */}
@@ -133,8 +202,13 @@ export function StudioSection() {
                     image={personImage}
                     onImage={setPersonImage}
                     emptyIcon={User}
-                    emptyHint="Upload a full-body photo"
+                    emptyHint={bodyProfile ? "Upload a photo for the composite" : "Upload a full-body photo"}
                   />
+                  {bodyProfile && bodyProfile.measurements && Object.keys(bodyProfile.measurements).length > 0 && (
+                    <p className="mt-1.5 text-[11px] text-muted-foreground text-center">
+                      Your saved measurements will be used — this photo is only for the try-on composite.
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -240,7 +314,10 @@ export function StudioSection() {
                       exit={{ opacity: 0 }}
                       className="absolute inset-0"
                     >
-                      <GenerationPanel />
+                      <GenerationPanel
+                        useSavedProfile={!!(bodyProfile?.measurements && Object.keys(bodyProfile.measurements).length > 0)}
+                        bodyProfile={bodyProfile}
+                      />
                     </motion.div>
                   ) : (
                     <motion.div
@@ -250,7 +327,10 @@ export function StudioSection() {
                       exit={{ opacity: 0 }}
                       className="absolute inset-0"
                     >
-                      <GenerationPanel />
+                      <GenerationPanel
+                        useSavedProfile={!!(bodyProfile?.measurements && Object.keys(bodyProfile.measurements).length > 0)}
+                        bodyProfile={bodyProfile}
+                      />
                     </motion.div>
                   )}
                 </AnimatePresence>

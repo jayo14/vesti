@@ -32,9 +32,20 @@ const PIPELINE_STAGES = [
 
 interface GenerationPanelProps {
   onGenerated?: () => void;
+  useSavedProfile?: boolean;
+  bodyProfile?: { height_cm: number; measurements: Record<string, number> } | null;
 }
 
-export function GenerationPanel({ onGenerated }: GenerationPanelProps) {
+const PIPELINE_STAGES_SAVED = [
+  { at: 0, label: "Reading your photo…" },
+  { at: 15, label: "Using your saved profile…" },
+  { at: 30, label: "Analyzing the garment…" },
+  { at: 50, label: "Fitting garment to your body…" },
+  { at: 70, label: "Rendering the try-on…" },
+  { at: 90, label: "Enhancing the result…" },
+];
+
+export function GenerationPanel({ onGenerated, useSavedProfile, bodyProfile }: GenerationPanelProps) {
   const {
     personImage,
     selectedGarment,
@@ -55,6 +66,7 @@ export function GenerationPanel({ onGenerated }: GenerationPanelProps) {
 
   const [error, setError] = useState<string | null>(null);
   const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pipelineStagesRef = useRef(PIPELINE_STAGES);
 
   const startProgressTicker = useCallback(() => {
     let p = 0;
@@ -63,7 +75,7 @@ export function GenerationPanel({ onGenerated }: GenerationPanelProps) {
       p += (90 - p) * 0.04 + 0.5;
       if (p >= 90) p = 90;
       setGenerationProgress(Math.min(90, p));
-      const stage = [...PIPELINE_STAGES].reverse().find((s) => p >= s.at);
+      const stage = [...pipelineStagesRef.current].reverse().find((s) => p >= s.at);
       if (stage) setGenerationStage(stage.label);
     }, 250);
   }, [setGenerationProgress, setGenerationStage]);
@@ -76,8 +88,14 @@ export function GenerationPanel({ onGenerated }: GenerationPanelProps) {
   }, []);
 
   useEffect(() => {
+    pipelineStagesRef.current = useSavedProfile ? PIPELINE_STAGES_SAVED : PIPELINE_STAGES;
+  }, [useSavedProfile]);
+
+  useEffect(() => {
     return () => stopProgressTicker();
   }, [stopProgressTicker]);
+
+  const pipelineStages = useSavedProfile ? PIPELINE_STAGES_SAVED : PIPELINE_STAGES;
 
   const generate = useCallback(async () => {
     if (!personImage) {
@@ -95,14 +113,18 @@ export function GenerationPanel({ onGenerated }: GenerationPanelProps) {
     setIsGenerating(true);
     setResultImage(null);
     setGenerationProgress(0);
-    setGenerationStage(PIPELINE_STAGES[0].label);
+    setGenerationStage(pipelineStages[0].label);
     startProgressTicker();
 
     try {
-      const body: TryOnRequest = {
+      const body: TryOnRequest & { use_saved_profile?: boolean } = {
         person_image: personImage,
         material: selectedMaterial || undefined,
       };
+
+      if (useSavedProfile && bodyProfile) {
+        body.use_saved_profile = true;
+      }
 
       if (selectedGarment) {
         body.product_id = parseInt(selectedGarment.id, 10) || selectedGarment.id;
@@ -146,6 +168,8 @@ export function GenerationPanel({ onGenerated }: GenerationPanelProps) {
     customGarmentImage,
     selectedGarment,
     selectedMaterial,
+    useSavedProfile,
+    bodyProfile,
     token,
     setIsGenerating,
     setResultImage,
