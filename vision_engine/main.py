@@ -47,6 +47,15 @@ app.add_middleware(
 
 app.add_exception_handler(VisionError, vision_exception_handler)
 
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(
+        "vision_engine.main:app",
+        host=settings.host,
+        port=settings.port,
+        log_level=settings.log_level,
+    )
+
 
 @app.get("/health")
 def health() -> JSONResponse:
